@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <title>Control de Accesos - TalentAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body
+    class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex"
+  >
+    <!-- SIDEBAR -->
+    <aside
+      class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex z-10"
+    >
+      <div>
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md shadow-blue-600/20"
+            >
+              <i class="fa-solid fa-brain text-xs"></i>
+            </div>
+            <span class="font-extrabold text-blue-950 tracking-tight text-lg"
+              >TalentAI</span
+            >
+          </div>
+        </div>
+        <div class="px-4 py-6">
+          <p
+            class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"
+          >
+            Workspace
+          </p>
+          <nav class="space-y-1">
+            <a href="dashboard.html#seccion-resumen" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+            </a>
+            <a href="dashboard.html#seccion-vacantes" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+            </a>
+            <a href="candidatos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos (ATS)
+            </a>
+            <a href="empleados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+            </a>
+            <a href="conocimiento.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-book w-4 text-center"></i> Base Conocimiento IA
+            </a>
+            <a href="usuarios.html" class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-blue-600 bg-blue-50 border border-blue-100">
+              <i class="fa-solid fa-shield-halved w-4 text-center"></i> Control de Accesos
+            </a>
+            <a href="bitacora.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+            </a>
+          </nav>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100">
+        <div
+          class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100"
+        >
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0"
+            >
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="truncate">
+              <p
+                id="info-admin"
+                class="text-xs font-bold text-slate-800 truncate"
+              >
+                Cargando...
+              </p>
+              <p
+                class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider"
+              >
+                Administrador
+              </p>
+            </div>
+          </div>
+          <button
+            id="btn-logout"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer shrink-0"
+            title="Cerrar Sesión"
+          >
+            <i class="fa-solid fa-power-off text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+      <header
+        class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0"
+      >
+        <div
+          class="flex items-center gap-2 text-xs font-semibold text-slate-500"
+        >
+          <span>Workspace</span>
+          <i class="fa-solid fa-chevron-right text-[8px] text-slate-300"></i>
+          <span class="text-blue-950 font-bold">Control de Accesos</span>
+        </div>
+        <button
+          id="btn-nuevo-usuario"
+          class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20"
+        >
+          <i class="fa-solid fa-user-plus"></i> Nuevo Usuario
+        </button>
+      </header>
+
+      <main class="flex-1 overflow-y-auto p-8 bg-origami">
+        <div class="max-w-7xl mx-auto space-y-6">
+          <div>
+            <h1 class="text-2xl font-black text-blue-950 tracking-tight">
+              Control de Accesos
+            </h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+              Gestión de credenciales y roles de los usuarios de la plataforma.
+            </p>
+          </div>
+
+          <!-- Alerta de Seguridad -->
+          <div
+            class="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center gap-3"
+          >
+            <i
+              class="fa-solid fa-triangle-exclamation text-orange-500 text-lg shrink-0"
+            ></i>
+            <p class="text-xs font-semibold text-orange-700">
+              <strong>Zona sensible:</strong> Los cambios de rol y contraseña
+              tienen efecto inmediato. Actúa con precaución y registra las
+              acciones en la bitácora.
+            </p>
+          </div>
+
+          <!-- Formulario crear/editar (colapsable) -->
+          <div
+            id="form-usuario-container"
+            class="hidden bg-white rounded-3xl border border-slate-200 shadow-sm p-6"
+          >
+            <h3
+              id="form-usuario-titulo"
+              class="text-sm font-extrabold text-blue-950 mb-4"
+            >
+              Crear nuevo usuario
+            </h3>
+            <form id="form-usuario" class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Nombre completo *</label
+                >
+                <input
+                  id="usr-nombre"
+                  type="text"
+                  required
+                  placeholder="Nombre completo"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Correo electrónico *</label
+                >
+                <input
+                  id="usr-email"
+                  type="email"
+                  required
+                  placeholder="correo@empresa.com"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Contraseña *</label
+                >
+                <input
+                  id="usr-password"
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Rol del usuario</label
+                >
+                <select
+                  id="usr-rol"
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
+                >
+                  <option value="empleado">Empleado</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+              <div class="col-span-2 flex gap-3 pt-2">
+                <button
+                  type="button"
+                  id="btn-cancelar-usuario"
+                  class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  id="btn-guardar-usuario"
+                  class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20"
+                >
+                  <i class="fa-solid fa-floppy-disk mr-1.5"></i> Guardar Usuario
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de Usuarios -->
+          <div
+            class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden"
+          >
+            <div
+              class="p-5 border-b border-slate-100 flex items-center justify-between"
+            >
+              <h4 class="text-sm font-extrabold text-blue-950">
+                Usuarios registrados
+              </h4>
+              <div class="relative">
+                <i
+                  class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+                ></i>
+                <input
+                  id="buscador-usuarios"
+                  type="text"
+                  placeholder="Buscar usuario..."
+                  class="pl-8 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
+                />
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-slate-100 bg-slate-50/80">
+                    <th
+                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                    >
+                      Nombre
+                    </th>
+                    <th
+                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                    >
+                      Correo
+                    </th>
+                    <th
+                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                    >
+                      Rol
+                    </th>
+                    <th
+                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                    >
+                      Fecha de Registro
+                    </th>
+                    <th
+                      class="py-4 px-6 text-right font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                    >
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-usuarios-body">
+                  <tr>
+                    <td colspan="5" class="py-12 text-center">
+                      <i
+                        class="fa-solid fa-circle-notch fa-spin text-blue-400 text-2xl"
+                      ></i>
+                      <p class="text-slate-400 font-medium mt-3 text-sm">
+                        Cargando usuarios...
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- MODAL: CAMBIAR ROL -->
+    <div
+      id="modal-rol"
+      class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-2xl w-full max-w-sm border border-slate-200 p-6 space-y-4"
+      >
+        <h3 class="text-base font-extrabold text-blue-950">
+          Cambiar Rol de Usuario
+        </h3>
+        <p class="text-xs text-slate-500">
+          Cambiando rol para:
+          <strong id="modal-rol-nombre" class="text-slate-700"></strong>
+        </p>
+        <input type="hidden" id="modal-rol-user-id" />
+        <div>
+          <label
+            class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+            >Nuevo rol</label
+          >
+          <select
+            id="modal-rol-select"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
+          >
+            <option value="empleado">Empleado</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="flex gap-3">
+          <button
+            id="btn-cancelar-rol"
+            class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            id="btn-guardar-rol"
+            class="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all"
+          >
+            <i class="fa-solid fa-shield-halved mr-1.5"></i> Aplicar Cambio
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/usuarios.js"></script>
+  </body>
+</html>

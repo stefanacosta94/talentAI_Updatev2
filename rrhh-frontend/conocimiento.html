@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <title>Base de Conocimiento IA - TalentAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex z-10">
+      <div>
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md shadow-blue-600/20">
+              <i class="fa-solid fa-brain text-xs"></i>
+            </div>
+            <span class="font-extrabold text-blue-950 tracking-tight text-lg">TalentAI</span>
+          </div>
+        </div>
+        <div class="px-4 py-6">
+          <p class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Workspace</p>
+          <nav class="space-y-1">
+            <a href="dashboard.html#seccion-resumen" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+            </a>
+            <a href="dashboard.html#seccion-vacantes" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+            </a>
+            <a href="candidatos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos (ATS)
+            </a>
+            <a href="empleados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+            </a>
+            <a href="conocimiento.html" class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-blue-600 bg-blue-50 border border-blue-100">
+              <i class="fa-solid fa-book w-4 text-center"></i> Base Conocimiento IA
+            </a>
+            <a href="usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-shield-halved w-4 text-center"></i> Control de Accesos
+            </a>
+            <a href="bitacora.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+            </a>
+          </nav>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100">
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="truncate">
+              <p id="info-admin" class="text-xs font-bold text-slate-800 truncate">Cargando...</p>
+              <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Administrador</p>
+            </div>
+          </div>
+          <button id="btn-logout" class="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer shrink-0" title="Cerrar Sesión">
+            <i class="fa-solid fa-power-off text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+      <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <span>Workspace</span>
+          <i class="fa-solid fa-chevron-right text-[8px] text-slate-300"></i>
+          <span class="text-blue-950 font-bold">Base de Conocimiento IA</span>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-y-auto p-8 bg-origami">
+        <div class="max-w-7xl mx-auto space-y-6">
+
+          <div>
+            <h1 class="text-2xl font-black text-blue-950 tracking-tight">Base de Conocimiento IA</h1>
+            <p class="text-xs text-slate-500 font-medium mt-1">Sube reglamentos, políticas y manuales en PDF. La IA los usará para responder las consultas de los empleados.</p>
+          </div>
+
+          <!-- Grid principal: 2/3 lista + 1/3 uploader -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Zona de subida de documentos -->
+            <div class="lg:col-span-1 space-y-4">
+              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-sm font-extrabold text-blue-950 mb-1">Subir nuevo documento</h3>
+                <p class="text-xs text-slate-500 mb-4">Sube un PDF y la IA extraerá su contenido automáticamente para entrenarse.</p>
+
+                <form id="form-documento" class="space-y-4">
+                  <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Título del documento *</label>
+                    <input id="doc-titulo" type="text" required placeholder="Ej: Reglamento Interno 2026" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Archivo PDF *</label>
+                    <label for="doc-archivo" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-2xl p-6 cursor-pointer transition-all bg-slate-50 hover:bg-blue-50/30 group">
+                      <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300 group-hover:text-blue-400 transition-colors"></i>
+                      <span id="doc-nombre-archivo" class="text-xs text-slate-400 font-medium mt-2 text-center">Haz clic para seleccionar un PDF</span>
+                    </label>
+                    <input type="file" id="doc-archivo" accept=".pdf" class="hidden" required />
+                  </div>
+
+                  <div id="doc-progreso" class="hidden">
+                    <div class="flex items-center gap-2 text-xs text-blue-600 font-medium">
+                      <i class="fa-solid fa-circle-notch fa-spin"></i>
+                      <span id="doc-progreso-msg">Extrayendo texto y subiendo a la nube...</span>
+                    </div>
+                  </div>
+
+                  <button type="submit" id="btn-subir-doc" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Procesar con IA
+                  </button>
+                </form>
+              </div>
+
+              <!-- Explicación del RAG -->
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 space-y-2">
+                <h4 class="text-xs font-black text-blue-800 flex items-center gap-2">
+                  <i class="fa-solid fa-robot"></i> ¿Cómo funciona?
+                </h4>
+                <p class="text-[11px] text-blue-700 leading-relaxed">
+                  El sistema <strong>RAG (Retrieval-Augmented Generation)</strong> extrae el texto de tus PDFs y lo usa como contexto cuando los empleados hacen preguntas. La IA solo responde con información de tus documentos.
+                </p>
+              </div>
+            </div>
+
+            <!-- Lista de documentos -->
+            <div class="lg:col-span-2">
+              <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h4 class="text-sm font-extrabold text-blue-950">Documentos cargados</h4>
+                    <p class="text-xs text-slate-500 mt-0.5"><span id="total-docs">0</span> documentos en la base de conocimiento</p>
+                  </div>
+                  <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full">
+                    <i class="fa-solid fa-circle-dot text-[8px] mr-1"></i> IA Activa
+                  </span>
+                </div>
+
+                <div id="lista-documentos" class="divide-y divide-slate-100">
+                  <div class="py-12 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-blue-400 text-2xl"></i>
+                    <p class="text-slate-400 font-medium mt-3 text-sm">Cargando documentos...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Vista previa del chat RAG -->
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6">
+            <h4 class="text-sm font-extrabold text-blue-950 mb-1">Probar el Asistente IA</h4>
+            <p class="text-xs text-slate-500 mb-4">Prueba aquí cómo responde la IA con la base de conocimiento actual (idéntico al portal del empleado).</p>
+            <div id="chat-preview-messages" class="space-y-3 mb-4 max-h-48 overflow-y-auto"></div>
+            <div class="flex gap-3">
+              <input id="preview-pregunta" type="text" placeholder="Escribe una pregunta como si fueras un empleado..." class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all" />
+              <button id="btn-preview-enviar" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/conocimiento.js"></script>
+  </body>
+</html>

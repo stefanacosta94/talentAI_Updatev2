@@ -1,0 +1,10 @@
+# Dependencias de Node
+node_modules/
+
+# Variables de entorno y contraseñas
+.env
+
+# Archivos de prueba
+cv_prueba.pdf
+# macOS
+.DS_Store

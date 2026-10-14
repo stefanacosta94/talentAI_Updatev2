@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Empleos | Únete a nuestro equipo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+      .bg-hero-pattern {
+        background-color: #0f172a;
+        background-image: radial-gradient(
+          circle at center,
+          #1e293b 0%,
+          #0f172a 100%
+        );
+      }
+      .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-600 selection:text-white"
+  >
+    <!-- ================= NAVBAR WEB PÚBLICA ================= -->
+    <nav
+      class="bg-white/80 backdrop-blur-md border-b border-slate-200 fixed w-full z-40 top-0 transition-all"
+    >
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="flex justify-between h-20 items-center">
+          <!-- Logo de la Empresa -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20"
+            >
+              <i class="fa-solid fa-briefcase text-white text-xl"></i>
+            </div>
+            <span class="font-extrabold text-2xl text-blue-950 tracking-tight"
+              >Corp<span class="text-blue-600">Talent</span></span
+            >
+          </div>
+
+          <!-- Enlaces de Navegación Públicos -->
+          <div class="hidden md:flex space-x-8">
+            <!-- ENLACE ACTUALIZADO -->
+            <a
+              href="#cultura"
+              class="text-slate-600 hover:text-blue-600 font-bold transition-colors"
+              >Nuestra Cultura</a
+            >
+            <a
+              href="#beneficios"
+              class="text-slate-600 hover:text-blue-600 font-bold transition-colors"
+              >Beneficios</a
+            >
+            <a
+              href="#vacantes"
+              class="text-blue-600 font-bold transition-colors"
+              >Ver Vacantes</a
+            >
+          </div>
+
+          <!-- Acceso discreto para empleados/admin -->
+          <div>
+            <a
+              href="index.html"
+              class="text-sm font-bold text-slate-500 hover:text-blue-950 bg-slate-100 px-4 py-2 rounded-lg transition-all"
+            >
+              <i class="fa-solid fa-lock text-[10px] mr-1"></i> Portal Empleados
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ================= HERO SECTION (Banner principal) ================= -->
+    <header
+      class="bg-hero-pattern text-white pt-32 pb-24 lg:pt-40 lg:pb-32 relative overflow-hidden"
+    >
+      <!-- Decoración de fondo abstracta -->
+      <div
+        class="absolute top-0 right-0 -mr-32 -mt-32 w-[500px] h-[500px] rounded-full bg-blue-600/20 blur-3xl"
+      ></div>
+      <div
+        class="absolute bottom-0 left-0 -ml-32 -mb-32 w-[400px] h-[400px] rounded-full bg-emerald-500/10 blur-3xl"
+      ></div>
+
+      <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 text-center">
+        <span
+          class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-sm font-bold tracking-widest uppercase mb-6 backdrop-blur-sm"
+        >
+          Estamos Contratando
+        </span>
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
+          Impulsa tu carrera con
+          <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400"
+            >nosotros</span
+          >
+        </h1>
+        <p
+          class="mt-4 text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed mb-10"
+        >
+          Buscamos mentes creativas y apasionadas. Únete a un equipo donde tu
+          trabajo tiene un impacto real y tu crecimiento profesional es
+          prioridad.
+        </p>
+        <a
+          href="#vacantes"
+          class="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-blue-950 bg-white rounded-full hover:bg-slate-100 hover:scale-105 transition-all shadow-xl shadow-white/10"
+        >
+          Ver posiciones abiertas <i class="fa-solid fa-arrow-down ml-2"></i>
+        </a>
+      </div>
+    </header>
+
+    <!-- ================= NUEVA SECCIÓN: NUESTRA CULTURA ================= -->
+    <section id="cultura" class="py-24 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <!-- Texto de Cultura -->
+          <div class="space-y-8 fade-in">
+            <div>
+              <span
+                class="text-blue-600 font-bold tracking-wider uppercase text-sm"
+                >Nuestra Cultura</span
+              >
+              <h2
+                class="text-3xl md:text-4xl font-extrabold text-blue-950 mt-2 mb-4"
+              >
+                Innovación, Empatía y Crecimiento
+              </h2>
+              <p class="text-slate-500 text-lg leading-relaxed">
+                Creemos que los mejores resultados nacen en un entorno donde las
+                ideas fluyen libremente. Fomentamos la colaboración, celebramos
+                la diversidad de pensamiento y nos impulsamos mutuamente para
+                alcanzar la excelencia profesional y personal.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div
+                class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"
+              >
+                <div
+                  class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4"
+                >
+                  <i class="fa-solid fa-rocket"></i>
+                </div>
+                <h4 class="font-bold text-blue-950 text-lg mb-2">Misión</h4>
+                <p class="text-slate-500 text-sm">
+                  Transformar la manera en que el talento humano se conecta con
+                  los objetivos estratégicos a través de la innovación.
+                </p>
+              </div>
+              <div
+                class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"
+              >
+                <div
+                  class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4"
+                >
+                  <i class="fa-solid fa-globe"></i>
+                </div>
+                <h4 class="font-bold text-blue-950 text-lg mb-2">Visión</h4>
+                <p class="text-slate-500 text-sm">
+                  Ser reconocidos como el mejor lugar para trabajar, creando
+                  equipos altamente competitivos y felices.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Imagen Fotográfica de Cultura -->
+          <div class="relative fade-in" style="animation-delay: 0.2s">
+            <!-- Usamos fotos de Unsplash como placeholder de alta calidad -->
+            <img
+              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+              alt="Equipo colaborando"
+              class="rounded-3xl shadow-2xl z-10 relative object-cover h-[500px] w-full border-4 border-white"
+            />
+            <!-- Elementos decorativos -->
+            <div
+              class="absolute -bottom-8 -left-8 w-40 h-40 bg-blue-600/20 rounded-full z-0 blur-3xl"
+            ></div>
+            <div
+              class="absolute -top-8 -right-8 w-40 h-40 bg-emerald-500/20 rounded-full z-0 blur-3xl"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN DE BENEFICIOS (ACTUALIZADA CON IMÁGENES) ================= -->
+    <section id="beneficios" class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-extrabold text-blue-950 mb-4">
+            Por qué elegirnos
+          </h2>
+          <p class="text-slate-500 max-w-2xl mx-auto text-lg">
+            No solo ofrecemos un empleo, te brindamos un entorno diseñado para
+            que alcances tu máximo potencial.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Beneficio 1 -->
+          <div
+            class="bg-slate-50 rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-shadow group fade-in"
+            style="animation-delay: 0.1s"
+          >
+            <div class="h-48 overflow-hidden relative">
+              <img
+                src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Trabajo Híbrido"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div
+                class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm w-10 h-10 rounded-full flex items-center justify-center text-blue-600 shadow-md"
+              >
+                <i class="fa-solid fa-laptop-house"></i>
+              </div>
+            </div>
+            <div class="p-8">
+              <h3 class="text-xl font-bold text-slate-800 mb-3">
+                Trabajo Híbrido
+              </h3>
+              <p class="text-slate-500 text-sm leading-relaxed">
+                Flexibilidad para trabajar desde casa y en nuestra oficina
+                moderna cuando el equipo lo requiera.
+              </p>
+            </div>
+          </div>
+
+          <!-- Beneficio 2 -->
+          <div
+            class="bg-slate-50 rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-shadow group fade-in"
+            style="animation-delay: 0.2s"
+          >
+            <div class="h-48 overflow-hidden relative">
+              <img
+                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Desarrollo Continuo"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div
+                class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm w-10 h-10 rounded-full flex items-center justify-center text-emerald-600 shadow-md"
+              >
+                <i class="fa-solid fa-arrow-trend-up"></i>
+              </div>
+            </div>
+            <div class="p-8">
+              <h3 class="text-xl font-bold text-slate-800 mb-3">
+                Desarrollo Continuo
+              </h3>
+              <p class="text-slate-500 text-sm leading-relaxed">
+                Presupuesto anual para capacitaciones, certificaciones y
+                asistencia a conferencias tecnológicas.
+              </p>
+            </div>
+          </div>
+
+          <!-- Beneficio 3 -->
+          <div
+            class="bg-slate-50 rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-shadow group fade-in"
+            style="animation-delay: 0.3s"
+          >
+            <div class="h-48 overflow-hidden relative">
+              <img
+                src="https://images.unsplash.com/photo-1505576399279-565b52d4ac71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Seguro Médico"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div
+                class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm w-10 h-10 rounded-full flex items-center justify-center text-purple-600 shadow-md"
+              >
+                <i class="fa-solid fa-heart-pulse"></i>
+              </div>
+            </div>
+            <div class="p-8">
+              <h3 class="text-xl font-bold text-slate-800 mb-3">
+                Seguro Médico Integral
+              </h3>
+              <p class="text-slate-500 text-sm leading-relaxed">
+                Cobertura médica y dental completa para ti y tu familia directa
+                desde el primer día de contratación.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN DE VACANTES ================= -->
+    <section id="vacantes" class="py-24 bg-slate-50">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div
+          class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4"
+        >
+          <div>
+            <h2 class="text-4xl font-extrabold text-blue-950 mb-4">
+              Posiciones Abiertas
+            </h2>
+            <p class="text-slate-500 text-lg">
+              Descubre dónde encajan tus habilidades y postúlate hoy mismo.
+            </p>
+          </div>
+          <div
+            class="bg-blue-100 text-blue-800 px-5 py-2.5 rounded-full font-bold shadow-sm border border-blue-200 inline-flex items-center gap-2"
+          >
+            <i class="fa-solid fa-briefcase"></i>
+            <span id="contador-vacantes">Cargando...</span>
+          </div>
+        </div>
+
+        <!-- CONTENEDOR DINÁMICO (Aquí inyecta las tarjetas careers.js) -->
+        <div
+          id="contenedor-vacantes"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          <!-- Se llenará vía JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FOOTER PÚBLICO ================= -->
+    <footer class="bg-white border-t border-slate-200 py-12">
+      <div
+        class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6"
+      >
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
+          >
+            <i class="fa-solid fa-briefcase text-white text-sm"></i>
+          </div>
+          <span class="font-bold text-xl text-blue-950"
+            >Corp<span class="text-blue-600">Talent</span></span
+          >
+        </div>
+
+        <p class="text-slate-500 text-sm font-medium text-center md:text-left">
+          &copy; 2026 Plataforma ATS impulsada por IA. Proyecto de Graduación.
+        </p>
+
+        <div class="flex gap-4">
+          <a
+            href="#"
+            class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-600 hover:text-white transition-colors"
+            ><i class="fa-brands fa-linkedin-in"></i
+          ></a>
+          <a
+            href="#"
+            class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-600 hover:text-white transition-colors"
+            ><i class="fa-brands fa-instagram"></i
+          ></a>
+          <a
+            href="#"
+            class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-600 hover:text-white transition-colors"
+            ><i class="fa-brands fa-twitter"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ================= MODAL DE APLICACIÓN ================= -->
+    <div
+      id="modal-aplicacion"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl transform scale-95 transition-all duration-200 overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <div
+          class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10"
+        >
+          <div>
+            <h3 class="text-2xl font-extrabold text-blue-950">
+              Formulario de Aplicación
+            </h3>
+            <p class="text-slate-500 text-sm font-medium mt-1">
+              Estás aplicando a:
+              <span
+                id="titulo-vacante-modal"
+                class="text-blue-600 font-bold"
+              ></span>
+            </p>
+          </div>
+          <button
+            type="button"
+            id="btn-cerrar-modal"
+            class="w-10 h-10 rounded-full bg-slate-200 text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors flex items-center justify-center text-lg"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="p-8 overflow-y-auto">
+          <form id="form-aplicacion" class="space-y-6">
+            <input type="hidden" id="c-id-vacante" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                  >Nombre Completo <span class="text-rose-500">*</span></label
+                >
+                <div class="relative">
+                  <i
+                    class="fa-solid fa-user absolute left-4 top-3.5 text-slate-400"
+                  ></i>
+                  <input
+                    type="text"
+                    id="c-nombre"
+                    required
+                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                    placeholder="Ej. Ana García"
+                  />
+                </div>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                  >Correo Electrónico
+                  <span class="text-rose-500">*</span></label
+                >
+                <div class="relative">
+                  <i
+                    class="fa-solid fa-envelope absolute left-4 top-3.5 text-slate-400"
+                  ></i>
+                  <input
+                    type="email"
+                    id="c-correo"
+                    required
+                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                    placeholder="ana@ejemplo.com"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                  >Teléfono</label
+                >
+                <div class="relative">
+                  <i
+                    class="fa-solid fa-phone absolute left-4 top-3.5 text-slate-400"
+                  ></i>
+                  <input
+                    type="tel"
+                    id="c-telefono"
+                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                    placeholder="+504 0000-0000"
+                  />
+                </div>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                  >Perfil de LinkedIn</label
+                >
+                <div class="relative">
+                  <i
+                    class="fa-brands fa-linkedin absolute left-4 top-3.5 text-slate-400"
+                  ></i>
+                  <input
+                    type="url"
+                    id="c-linkedin"
+                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+                    placeholder="https://linkedin.com/in/usuario"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100">
+              <label
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3"
+                >Sube tu Currículum (PDF)
+                <span class="text-rose-500">*</span></label
+              >
+              <div class="relative group cursor-pointer">
+                <input
+                  type="file"
+                  id="c-archivo-cv"
+                  accept="application/pdf"
+                  required
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div
+                  class="w-full p-8 border-2 border-dashed border-blue-200 rounded-2xl bg-blue-50 text-center group-hover:bg-blue-100 group-hover:border-blue-300 transition-all flex flex-col items-center justify-center"
+                >
+                  <div
+                    class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 text-xl mb-3"
+                  >
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <span class="text-blue-800 font-bold text-sm"
+                    >Haz clic o arrastra tu PDF aquí</span
+                  >
+                  <span
+                    id="nombre-archivo"
+                    class="text-slate-500 text-xs mt-2 font-medium"
+                    >Formato PDF. Máx 5MB.</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4">
+              <button
+                type="submit"
+                id="btn-enviar-aplicacion"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-4 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
+              >
+                <span>Enviar Aplicación</span>
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL DE ÉXITO ================= -->
+    <div
+      id="modal-exito"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl w-full max-w-md p-8 text-center shadow-2xl transform scale-95 transition-all duration-200"
+      >
+        <div
+          class="w-24 h-24 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-6"
+        >
+          <i class="fa-solid fa-check text-5xl text-emerald-500"></i>
+        </div>
+        <h3 class="text-2xl font-extrabold text-blue-950 mb-2">
+          ¡Aplicación Recibida!
+        </h3>
+        <p class="text-slate-500 mb-8 font-medium leading-relaxed">
+          Tu currículum ha sido enviado con éxito. Nuestro motor de IA analizará
+          tu perfil y nuestro equipo de RRHH se pondrá en contacto contigo
+          pronto.
+        </p>
+        <button
+          id="btn-cerrar-exito"
+          class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl transition-colors"
+        >
+          Entendido, volver a vacantes
+        </button>
+      </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/config.js"></script>
+    <script src="js/careers.js"></script>
+  </body>
+</html>

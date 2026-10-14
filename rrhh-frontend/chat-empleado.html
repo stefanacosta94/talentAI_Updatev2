@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <title>Asistente HR IA - TalentAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body
+    class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex flex-col"
+  >
+    <!-- Top Navbar (Versión Empleado) -->
+    <header
+      class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10 shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md shadow-blue-600/20"
+        >
+          <i class="fa-solid fa-brain text-xs"></i>
+        </div>
+        <span class="font-extrabold text-blue-950 tracking-tight text-lg"
+          >TalentAI
+          <span class="text-slate-400 font-medium text-sm ml-2"
+            >| Portal del Empleado</span
+          ></span
+        >
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right hidden sm:block">
+          <p id="info-empleado-nombre" class="text-xs font-bold text-slate-800">
+            Cargando...
+          </p>
+          <p
+            class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider"
+          >
+            Empleado
+          </p>
+        </div>
+        <button
+          id="btn-logout"
+          class="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center justify-center"
+        >
+          <i class="fa-solid fa-power-off text-sm"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Contenedor Principal del Chat -->
+    <main class="flex-1 flex justify-center bg-origami overflow-hidden">
+      <div
+        class="w-full max-w-4xl flex flex-col h-full bg-white sm:border-x border-slate-200 shadow-sm"
+      >
+        <!-- Cabecera del Chat -->
+        <div
+          class="px-6 py-4 border-b border-slate-100 flex items-center gap-4 bg-slate-50/50"
+        >
+          <div class="relative">
+            <div
+              class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl shadow-sm border border-blue-200"
+            >
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div
+              class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"
+            ></div>
+          </div>
+          <div>
+            <h2 class="text-lg font-extrabold text-blue-950 leading-tight">
+              Asistente de Recursos Humanos
+            </h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">
+              Respuestas basadas en los manuales y políticas de la empresa.
+            </p>
+          </div>
+        </div>
+
+        <!-- Área de Mensajes -->
+        <div
+          id="chat-historial"
+          class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-white"
+        >
+          <!-- Mensaje de Bienvenida (IA) -->
+          <div class="flex items-end gap-3 max-w-[85%]">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0"
+            >
+              <i class="fa-solid fa-robot text-xs"></i>
+            </div>
+            <div
+              class="bg-slate-50 border border-slate-100 px-5 py-3.5 rounded-2xl rounded-bl-none text-sm text-slate-700 shadow-sm"
+            >
+              ¡Hola! Soy tu asistente virtual de Recursos Humanos. He sido
+              entrenado con los manuales y políticas de la empresa. ¿En qué te
+              puedo ayudar hoy?
+            </div>
+          </div>
+
+          <!-- Sugerencias (Chips) -->
+          <div id="sugerencias-chat" class="flex flex-wrap gap-2 pl-11">
+            <button
+              class="chip-sugerencia px-4 py-2 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 text-xs font-bold rounded-full transition-colors shadow-sm"
+            >
+              ¿Cuáles son los horarios flexibles?
+            </button>
+            <button
+              class="chip-sugerencia px-4 py-2 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 text-xs font-bold rounded-full transition-colors shadow-sm"
+            >
+              ¿Cómo solicito vacaciones?
+            </button>
+            <button
+              class="chip-sugerencia px-4 py-2 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 text-xs font-bold rounded-full transition-colors shadow-sm"
+            >
+              Código de vestimenta
+            </button>
+          </div>
+        </div>
+
+        <!-- Área de Input -->
+        <div class="p-4 sm:p-6 bg-white border-t border-slate-100">
+          <form id="form-chat" class="relative flex items-end gap-3">
+            <div class="relative flex-1">
+              <textarea
+                id="input-pregunta"
+                rows="1"
+                class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-2xl pl-5 pr-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 resize-none transition-all scrollbar-hide"
+                placeholder="Escribe tu pregunta sobre las políticas aquí..."
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              id="btn-enviar"
+              class="w-12 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all shadow-md shadow-blue-600/20 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+          </form>
+          <div class="text-center mt-3">
+            <span class="text-[10px] text-slate-400 font-medium"
+              ><i class="fa-solid fa-shield-halved mr-1"></i> La IA puede
+              cometer errores. Verifica la información importante con
+              RR.HH.</span
+            >
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/chat-empleado.js"></script>
+  </body>
+</html>

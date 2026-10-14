@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Panel Administrativo - TalentAI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body
+    class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex"
+  >
+    <!-- 1. SIDEBAR IZQUIERDO -->
+    <aside
+      class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex"
+    >
+      <div>
+        <!-- Logo / Brand -->
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md shadow-blue-600/20"
+            >
+              <i class="fa-solid fa-brain text-xs"></i>
+            </div>
+            <span class="font-extrabold text-blue-950 tracking-tight text-lg"
+              >TalentAI</span
+            >
+          </div>
+        </div>
+
+        <!-- Navegación Workspace -->
+        <div class="px-4 py-6">
+          <p
+            class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"
+          >
+            Workspace
+          </p>
+          <nav class="space-y-1">
+            <a href="#seccion-resumen" data-target="seccion-resumen" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 border border-transparent hover:bg-slate-50">
+              <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+            </a>
+            <a href="#seccion-vacantes" data-target="seccion-vacantes" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 border border-transparent hover:bg-slate-50">
+              <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+            </a>
+            <a href="candidatos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos (ATS)
+            </a>
+            <a href="empleados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+            </a>
+            <a href="conocimiento.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-book w-4 text-center"></i> Base Conocimiento IA
+            </a>
+            <a href="usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-shield-halved w-4 text-center"></i> Control de Accesos
+            </a>
+            <a href="bitacora.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
+              <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Footer del Sidebar (Perfil y Logout) -->
+      <div class="p-4 border-t border-slate-100">
+        <div
+          class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100"
+        >
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div
+              class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0"
+            >
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="truncate">
+              <p
+                id="info-admin"
+                class="text-xs font-bold text-slate-800 truncate"
+              >
+                Cargando...
+              </p>
+              <p
+                class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider"
+              >
+                Administrador
+              </p>
+            </div>
+          </div>
+          <button
+            id="btn-logout"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer shrink-0"
+            title="Cerrar Sesión"
+          >
+            <i class="fa-solid fa-power-off text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 2. CONTENEDOR PRINCIPAL -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+      <!-- Top Navbar -->
+      <header
+        class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0"
+      >
+        <div
+          class="flex items-center gap-2 text-xs font-semibold text-slate-500"
+        >
+          <span>Workspace</span>
+          <i class="fa-solid fa-chevron-right text-[8px] text-slate-300"></i>
+          <span class="text-blue-950 font-bold">Panel Administrativo</span>
+        </div>
+      </header>
+
+      <!-- Área de Contenido Desplazable -->
+      <main class="flex-1 overflow-y-auto p-8 bg-origami">
+        <div class="max-w-7xl mx-auto space-y-8">
+          <!-- SECCIÓN 1: RESUMEN -->
+          <div id="seccion-resumen" class="section-panel space-y-8">
+            <div>
+              <h1 class="text-2xl font-black text-blue-950 tracking-tight">
+                Panel de Control Operativo
+              </h1>
+              <p class="text-xs text-slate-500 font-medium mt-1">
+                Resumen general y métricas globales de talento humano
+                centralizadas.
+              </p>
+            </div>
+
+            <!-- Fila de Tarjetas de Totales -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <!-- Tarjeta Vacantes -->
+              <div
+                class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between"
+              >
+                <div class="flex justify-between items-start">
+                  <span
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                    >Total de Vacantes</span
+                  >
+                  <div
+                    class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100"
+                  >
+                    <i class="fa-solid fa-briefcase text-sm"></i>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <h3
+                    id="contador-vacantes"
+                    class="text-4xl font-black text-blue-950"
+                  >
+                    0
+                  </h3>
+                  <p class="text-[11px] text-blue-600 font-bold mt-1">
+                    <i class="fa-solid fa-layer-group mr-1"></i> Plazas
+                    registradas
+                  </p>
+                </div>
+              </div>
+
+              <!-- Tarjeta Candidatos -->
+              <div
+                class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between"
+              >
+                <div class="flex justify-between items-start">
+                  <span
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                    >Total de Candidatos</span
+                  >
+                  <div
+                    class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100"
+                  >
+                    <i class="fa-solid fa-users text-sm"></i>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <h3
+                    id="contador-aplicaciones"
+                    class="text-4xl font-black text-blue-950"
+                  >
+                    0
+                  </h3>
+                  <p class="text-[11px] text-indigo-600 font-bold mt-1">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
+                    Evaluados por IA
+                  </p>
+                </div>
+              </div>
+
+              <!-- Tarjeta Empleados -->
+              <div
+                class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between"
+              >
+                <div class="flex justify-between items-start">
+                  <span
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                    >Total de Empleados</span
+                  >
+                  <div
+                    class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100"
+                  >
+                    <i class="fa-solid fa-id-card text-sm"></i>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <h3
+                    id="contador-empleados"
+                    class="text-4xl font-black text-blue-950"
+                  >
+                    0
+                  </h3>
+                  <p class="text-[11px] text-emerald-600 font-bold mt-1">
+                    <i class="fa-solid fa-user-check mr-1"></i> Plantilla activa
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Paneles Inferiores -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div
+                class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4"
+              >
+                <h4
+                  class="text-sm font-extrabold text-blue-950 flex items-center justify-between"
+                >
+                  <span>Vacantes Registradas en el Sistema</span>
+                  <span
+                    class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100"
+                    >Activas</span
+                  >
+                </h4>
+                <div id="resumen-vacantes-cards" class="space-y-3"></div>
+              </div>
+
+              <div
+                class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4"
+              >
+                <h4
+                  class="text-sm font-extrabold text-blue-950 flex items-center justify-between"
+                >
+                  <span>Personal y Plantilla Activa</span>
+                  <span
+                    class="text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100"
+                    >Empleados</span
+                  >
+                </h4>
+                <div id="contenedor-empleados" class="space-y-3"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: VACANTES -->
+          <div id="seccion-vacantes" class="section-panel hidden space-y-6">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div>
+                <h3 class="text-xl font-extrabold text-blue-950">
+                  Gestión de Vacantes
+                </h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">
+                  Control y visualización tabular de plazas corporativas.
+                </p>
+              </div>
+              <button
+                id="btn-nueva-vacante"
+                class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20 flex items-center gap-2"
+              >
+                <i class="fa-solid fa-plus"></i> Nueva Vacante
+              </button>
+            </div>
+
+            <div
+              class="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between"
+            >
+              <div class="relative w-full sm:w-72">
+                <span
+                  class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400"
+                >
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input
+                  type="text"
+                  id="filtro-buscar-vacante"
+                  placeholder="Buscar por título..."
+                  class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+              <div class="flex items-center gap-3 w-full sm:w-auto">
+                <select
+                  id="filtro-dep-vacante"
+                  class="w-full sm:w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                >
+                  <option value="">Todos los departamentos</option>
+                </select>
+                <input
+                  type="date"
+                  id="filtro-fecha-vacante"
+                  class="w-full sm:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+            </div>
+
+            <div
+              class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr
+                      class="border-b border-slate-100 text-slate-400 uppercase tracking-widest text-[10px] bg-slate-50/50"
+                    >
+                      <th class="py-3.5 px-6 font-black">Título del Puesto</th>
+                      <th class="py-3.5 px-6 font-black">Departamento</th>
+                      <th class="py-3.5 px-6 font-black">Estado</th>
+                      <th class="py-3.5 px-6 font-black">Fecha de Registro</th>
+                      <th class="py-3.5 px-6 font-black text-right">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="tabla-vacantes-body"
+                    class="divide-y divide-slate-100"
+                  ></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: EMPLEADOS -->
+          <div id="seccion-empleados" class="section-panel hidden space-y-6">
+            <h3 class="text-xl font-extrabold text-blue-950">
+              Registro de Empleados
+            </h3>
+            <form
+              id="form-empleado"
+              class="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 max-w-xl"
+            >
+              <input
+                type="text"
+                id="empleado-nombre"
+                placeholder="Nombre completo"
+                required
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <input
+                type="email"
+                id="empleado-correo"
+                placeholder="Correo electrónico"
+                required
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <input
+                type="date"
+                id="empleado-fecha"
+                required
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <input
+                type="number"
+                id="empleado-id-departamento"
+                placeholder="ID Departamento"
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <input
+                type="number"
+                id="empleado-id-rol"
+                placeholder="ID Rol"
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <select
+                id="empleado-estado"
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              >
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+              <button
+                type="submit"
+                id="btn-guardar-empleado"
+                class="py-3 px-6 bg-blue-600 text-white text-xs font-bold rounded-xl"
+              >
+                Registrar Empleado
+              </button>
+            </form>
+            <div
+              id="contenedor-empleados-seccion"
+              class="grid grid-cols-1 md:grid-cols-2 gap-4"
+            ></div>
+          </div>
+
+          <!-- SECCIÓN 4: CONTROL DE ACCESOS (USUARIOS) -->
+          <div id="seccion-usuarios" class="section-panel hidden space-y-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-extrabold text-blue-950">
+                Control de Accesos y Usuarios
+              </h3>
+              <button
+                id="btn-crear-usuario"
+                class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl"
+              >
+                Nuevo Usuario
+              </button>
+            </div>
+
+            <form
+              id="form-usuario"
+              class="hidden bg-white p-6 rounded-3xl border border-slate-200 space-y-4 max-w-xl"
+            >
+              <input
+                type="text"
+                id="usuario-nombre"
+                placeholder="Nombre"
+                required
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <input
+                type="email"
+                id="usuario-email"
+                placeholder="Correo"
+                required
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <input
+                type="password"
+                id="usuario-password"
+                placeholder="Contraseña"
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              />
+              <select
+                id="usuario-rol"
+                class="w-full p-3 bg-slate-50 border rounded-xl text-xs"
+              >
+                <option value="empleado">Empleado</option>
+                <option value="admin">Admin</option>
+              </select>
+              <div class="flex gap-2">
+                <button
+                  type="submit"
+                  id="btn-guardar-usuario"
+                  class="py-2 px-4 bg-blue-600 text-white text-xs font-bold rounded-xl"
+                >
+                  Guardar usuario
+                </button>
+                <button
+                  type="button"
+                  id="btn-cancelar-usuario"
+                  class="py-2 px-4 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+
+            <div
+              class="bg-white rounded-3xl border border-slate-200 overflow-hidden p-6"
+            >
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr
+                    class="border-b border-slate-100 text-slate-400 uppercase tracking-widest text-[10px]"
+                  >
+                    <th class="py-3">Nombre</th>
+                    <th class="py-3">Email</th>
+                    <th class="py-3">Rol</th>
+                    <th class="py-3">Creado</th>
+                    <th class="py-3 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-usuarios"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ================= SECCIÓN 5: BASE DE CONOCIMIENTO (RAG) (AQUÍ ESTÁ LA CORRECCIÓN) ================= -->
+          <section
+            id="seccion-conocimiento"
+            class="section-panel hidden space-y-6"
+          >
+            <div
+              class="flex justify-between items-center bg-white p-6 rounded-3xl border border-slate-200 shadow-sm"
+            >
+              <div>
+                <h2 class="text-2xl font-extrabold text-blue-950">
+                  Base de Conocimiento IA
+                </h2>
+                <p class="text-slate-500 text-sm mt-1">
+                  Sube manuales y reglamentos. La IA los leerá para responder
+                  dudas de los empleados.
+                </p>
+              </div>
+              <button
+                id="btn-nuevo-documento"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-xl transition-all shadow-md text-sm flex items-center gap-2"
+              >
+                <i class="fa-solid fa-file-arrow-up"></i> Subir Documento
+              </button>
+            </div>
+
+            <div
+              class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr
+                    class="bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-400 uppercase tracking-wider"
+                  >
+                    <th class="py-4 px-6">Título del Documento</th>
+                    <th class="py-4 px-6 text-center">Última Actualización</th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="tabla-documentos-body"
+                  class="divide-y divide-slate-100 text-sm"
+                >
+                  <tr>
+                    <td colspan="2" class="py-6 text-center text-slate-400">
+                      Cargando documentos...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+        <!-- CIERRE DE CONTENEDOR max-w-7xl -->
+      </main>
+      <!-- CIERRE DE MAIN -->
+    </div>
+    <!-- CIERRE DE flex-1 flex flex-col -->
+
+    <!-- ================= ZONA DE MODALES (FUERA DEL DISEÑO PRINCIPAL) ================= -->
+
+    <!-- MODAL: SUBIR DOCUMENTO (RAG) -->
+    <div
+      id="modal-documento"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col transform scale-95 transition-all"
+      >
+        <div
+          class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50"
+        >
+          <h3 class="text-lg font-bold text-blue-950">
+            Entrenar IA con Documento
+          </h3>
+          <button
+            type="button"
+            id="btn-cerrar-modal-doc"
+            class="text-slate-400 hover:text-rose-500 transition-colors"
+          >
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <form id="form-documento" class="space-y-4">
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                >Título del Documento *</label
+              >
+              <input
+                type="text"
+                id="doc-titulo"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Ej. Reglamento Interno 2026"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                >Archivo PDF *</label
+              >
+              <input
+                type="file"
+                id="doc-archivo"
+                accept="application/pdf"
+                required
+                class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all border border-slate-200 rounded-xl bg-slate-50"
+              />
+            </div>
+            <button
+              type="submit"
+              id="btn-guardar-doc"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mt-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+            >
+              Procesar y Guardar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL NUEVA/ACTUALIZAR VACANTE -->
+    <div
+      id="modal-vacante"
+      class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-8 border border-slate-200 shadow-2xl"
+      >
+        <div class="flex justify-between items-start mb-6">
+          <h3
+            id="modal-vacante-titulo"
+            class="text-xl font-extrabold text-blue-950"
+          >
+            Publicar Nueva Vacante
+          </h3>
+          <button
+            id="btn-cerrar-modal"
+            class="text-slate-400 hover:text-slate-600"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form id="form-vacante" class="space-y-4">
+          <!-- (Contenido intacto) -->
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >Título del Puesto</label
+            >
+            <input
+              type="text"
+              id="v-titulo"
+              placeholder="Ej. Desarrollador Fullstack"
+              required
+              class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >Departamento</label
+            >
+            <select
+              id="v-departamento"
+              required
+              class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700"
+            >
+              <option value="">Seleccione un departamento...</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >Fecha de Creación</label
+            >
+            <input
+              type="date"
+              id="v-fecha"
+              required
+              class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >Descripción del Puesto</label
+            >
+            <textarea
+              id="v-descripcion"
+              placeholder="Detalles de la posición..."
+              required
+              class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium h-20"
+            ></textarea>
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >Requisitos Técnicos</label
+            >
+            <textarea
+              id="v-requisitos"
+              placeholder="Habilidades y experiencia..."
+              required
+              class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium h-20"
+            ></textarea>
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button
+              type="submit"
+              id="btn-guardar-vacante"
+              class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20"
+            >
+              Publicar Vacante
+            </button>
+            <button
+              type="button"
+              id="btn-cancelar-modal"
+              class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL DE DETALLE DE VACANTE -->
+    <div
+      id="modal-detalle-vacante"
+      class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-8 border border-slate-200 shadow-2xl space-y-6"
+      >
+        <div class="flex justify-between items-start">
+          <div>
+            <span
+              id="detalle-vacante-depto"
+              class="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-1"
+              >Departamento</span
+            >
+            <h3
+              id="detalle-vacante-titulo"
+              class="text-xl font-extrabold text-blue-950 leading-tight"
+            >
+              Título del Puesto
+            </h3>
+          </div>
+          <button
+            id="btn-cerrar-detalle-vacante"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+          >
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+        <div class="space-y-4 text-xs">
+          <div>
+            <p
+              class="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-1"
+            >
+              Descripción General
+            </p>
+            <p
+              id="detalle-vacante-desc"
+              class="text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100"
+            ></p>
+          </div>
+          <div>
+            <p
+              class="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-1"
+            >
+              Requisitos Técnicos
+            </p>
+            <p
+              id="detalle-vacante-req"
+              class="text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100"
+            ></p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 pt-2">
+            <div>
+              <p
+                class="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-0.5"
+              >
+                Estado
+              </p>
+              <p
+                id="detalle-vacante-estado"
+                class="font-bold text-slate-800"
+              ></p>
+            </div>
+            <div>
+              <p
+                class="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-0.5"
+              >
+                Fecha de Registro
+              </p>
+              <p
+                id="detalle-vacante-fecha"
+                class="font-bold text-slate-800"
+              ></p>
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          id="btn-cerrar-detalle-footer"
+          class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all"
+        >
+          Cerrar Ventana
+        </button>
+      </div>
+    </div>
+
+    <!-- Scripts de Control -->
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
+  </body>
+</html>

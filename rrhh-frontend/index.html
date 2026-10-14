@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar Sesión - TalentAI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Iconos -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body
+    class="bg-origami font-sans text-slate-900 antialiased min-h-screen flex items-center justify-center p-6"
+  >
+    <div
+      class="max-w-md w-full bg-white/98 backdrop-blur-md p-8 rounded-3xl border border-slate-200/80 shadow-2xl shadow-slate-200/50"
+    >
+      <!-- Logo y Cabecera -->
+      <div class="text-center mb-8">
+        <div
+          class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-xl mx-auto shadow-lg shadow-blue-600/30 mb-4"
+        >
+          <i class="fa-solid fa-brain"></i>
+        </div>
+        <h1 class="text-2xl font-black text-blue-950 tracking-tight">
+          TalentAI Workspace
+        </h1>
+        <p class="text-xs text-slate-500 font-medium mt-1">
+          Ingresa tus credenciales para iniciar sesión y acceder
+        </p>
+      </div>
+
+      <!-- Alerta de Error (Controlada por auth.js) -->
+      <div
+        id="error-login"
+        class="hidden mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold text-center"
+      ></div>
+
+      <!-- Formulario de Login -->
+      <form id="form-login" class="space-y-5">
+        <div>
+          <label
+            class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
+            for="email"
+            >Correo Electrónico</label
+          >
+          <div class="relative">
+            <span
+              class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400"
+            >
+              <i class="fa-solid fa-envelope text-xs"></i>
+            </span>
+            <input
+              type="email"
+              id="email"
+              required
+              placeholder="admin@talentai.com"
+              class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
+            for="password"
+            >Contraseña</label
+          >
+          <div class="relative">
+            <span
+              class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400"
+            >
+              <i class="fa-solid fa-lock text-xs"></i>
+            </span>
+            <input
+              type="password"
+              id="password"
+              required
+              placeholder="••••••••"
+              class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="btn-submit"
+          class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+        >
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+        <p class="text-[11px] text-slate-400 font-medium">
+          Desarrollado por
+          <span class="font-bold text-slate-600"
+            >Stefan Eduardo Acosta - 31641391</span
+          >
+          - 2026 copyright &copy; TalentAI. Todos los derechos reservados.
+        </p>
+      </div>
+    </div>
+
+    <!-- Scripts de Control -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

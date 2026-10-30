@@ -30,10 +30,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const docProgreso = document.getElementById("doc-progreso");
   const btnSubir = document.getElementById("btn-subir-doc");
   const totalDocs = document.getElementById("total-docs");
+  const editarModal = document.getElementById("modal-editar-documento");
+  const editarForm = document.getElementById("form-editar-documento");
+  const editarInput = document.getElementById("editar-documento-nombre");
+  let documentosCargados = [];
+  let documentoEditandoId = null;
 
-  const chatMessages = document.getElementById("chat-preview-messages");
-  const btnPreviewEnviar = document.getElementById("btn-preview-enviar");
-  const inputPreviewPregunta = document.getElementById("preview-pregunta");
 
   async function fetchJson(url, options) {
     const res = await fetch(url, options);
@@ -48,50 +50,32 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (data.exito) {
         totalDocs.innerText = data.total;
-        renderizarDocumentos(data.documentos);
+        documentosCargados = data.documentos || [];
+        renderizarDocumentos(documentosCargados);
       }
     } catch (e) {
-      listaDocumentos.innerHTML = `<div class="p-5 text-center text-rose-500">Error al cargar documentos</div>`;
+      listaDocumentos.innerHTML = `<tr><td colspan="3" class="p-5 text-center text-rose-500">Error al cargar documentos</td></tr>`;
     }
   }
 
   function renderizarDocumentos(docs) {
-    listaDocumentos.innerHTML = "";
-    if (docs.length === 0) {
-      listaDocumentos.innerHTML = `<div class="p-8 text-center text-slate-500">No hay documentos en la base de conocimiento.</div>`;
+    if (!docs.length) {
+      listaDocumentos.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-slate-500">No hay documentos registrados.</td></tr>';
       return;
     }
-
-    docs.forEach(doc => {
-      const fecha = new Date(doc.fecha_actualizacion || new Date()).toLocaleDateString("es-ES");
-      const idDocumento = Number(doc.id_documento) || 0;
-
-      const div = document.createElement("div");
-      div.className = "p-5 flex items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors";
-      div.innerHTML = `
-        <div class="flex items-center gap-4 min-w-0">
-          <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center text-lg border border-red-100 shrink-0">
-            <i class="fa-solid fa-file-pdf"></i>
-          </div>
-          <div class="min-w-0">
-            <h5 class="font-bold text-blue-950 truncate">${SecurityUtils.escapeHTML(doc.titulo)}</h5>
-            <div class="flex items-center gap-3 mt-1">
-              <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>${SecurityUtils.escapeHTML(fecha)}</span>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          ${doc.tiene_archivo ? `
-            <button type="button" data-id="${idDocumento}" class="btn-ver-doc px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all text-xs font-bold" title="Ver PDF">
-              <i class="fa-solid fa-eye mr-1"></i>Ver PDF
-            </button>` : ''}
-          <button type="button" data-id="${idDocumento}" class="btn-eliminar-doc px-3 py-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all text-xs font-bold" title="Eliminar">
-            <i class="fa-solid fa-trash-can mr-1"></i>Eliminar
-          </button>
-        </div>
-      `;
-      listaDocumentos.appendChild(div);
-    });
+    listaDocumentos.innerHTML = docs.map(doc => {
+      const fecha = doc.fecha_actualizacion ? new Date(doc.fecha_actualizacion).toLocaleDateString("es-HN") : "Sin fecha";
+      const id = Number(doc.id_documento);
+      return `<tr class="border-b border-slate-100 hover:bg-slate-50/60">
+        <td class="p-4 font-bold text-blue-950"><i class="fa-solid fa-file-pdf mr-2 text-rose-600"></i>${SecurityUtils.escapeHTML(doc.titulo)}</td>
+        <td class="p-4 text-slate-500 whitespace-nowrap">${SecurityUtils.escapeHTML(fecha)}</td>
+        <td class="p-4 text-right whitespace-nowrap">
+          ${doc.tiene_archivo ? `<button data-id="${id}" class="btn-ver-doc px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold" title="Ver PDF">Ver PDF</button>` : ""}
+          <button data-id="${id}" class="btn-editar-doc px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold" title="Editar título">Editar</button>
+          <button data-id="${id}" class="btn-eliminar-doc px-3 py-2 rounded-lg bg-rose-50 text-rose-700 text-xs font-bold" title="Eliminar">Eliminar</button>
+        </td>
+      </tr>`;
+    }).join("");
   }
 
   inputArchivo.addEventListener("change", (e) => {
@@ -170,6 +154,18 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const btnEditar = e.target.closest(".btn-editar-doc");
+    if (btnEditar) {
+      const doc = documentosCargados.find(d => String(d.id_documento) === btnEditar.dataset.id);
+      if (!doc) return;
+      documentoEditandoId = doc.id_documento;
+      editarInput.value = doc.titulo;
+      document.getElementById("editar-documento-pdf").value = "";
+      editarModal.classList.remove("hidden");
+      editarInput.focus();
+      return;
+    }
+
     const btnEliminar = e.target.closest(".btn-eliminar-doc");
     if (!btnEliminar) return;
     const id = btnEliminar.dataset.id;
@@ -193,46 +189,33 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
-  // Chat Preview
-  function addMessage(text, isUser = false) {
-    const div = document.createElement("div");
-    div.className = `p-3 rounded-2xl max-w-[85%] text-xs ${isUser ? 'bg-blue-600 text-white ml-auto rounded-tr-none' : 'bg-slate-100 text-slate-700 mr-auto rounded-tl-none'}`;
-    div.innerText = text;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  btnPreviewEnviar.addEventListener("click", async () => {
-    const pregunta = inputPreviewPregunta.value.trim();
-    if (!pregunta) return;
-    
-    addMessage(pregunta, true);
-    inputPreviewPregunta.value = "";
-    
-    const loadingId = "loading-" + Date.now();
-    const div = document.createElement("div");
-    div.id = loadingId;
-    div.className = "p-3 rounded-2xl max-w-[85%] text-xs bg-slate-100 text-slate-700 mr-auto rounded-tl-none";
-    div.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...`;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
+  document.getElementById("btn-cancelar-editar-documento")?.addEventListener("click", () => {
+    editarModal.classList.add("hidden");
+    documentoEditandoId = null;
+  });
+  editarForm?.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (documentoEditandoId == null) return;
+    const titulo = editarInput.value.trim();
+    if (!titulo) return NotificationService.warning("Título obligatorio", "Indica un nombre para el documento.");
     try {
-      const { data } = await fetchJson(`${CONFIG.API_URL}/empleados/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ pregunta })
-      });
-      document.getElementById(loadingId).remove();
-      if (data.exito) {
-        addMessage(data.respuesta);
-      } else {
-        addMessage("Error: " + data.error);
+      const archivo = document.getElementById("editar-documento-pdf").files[0];
+      if (archivo && (archivo.size > 5 * 1024 * 1024 || archivo.type !== "application/pdf")) {
+        return NotificationService.warning("PDF inválido", "Selecciona un PDF válido de hasta 5 MB.");
       }
-    } catch (e) {
-      document.getElementById(loadingId).remove();
-      addMessage("Error de conexión");
-    }
+      const payload = new FormData();
+      payload.append("titulo", titulo);
+      if (archivo) payload.append("archivo_documento", archivo);
+      const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/documentos/${documentoEditandoId}`, {
+        method: "PUT", headers: { Authorization: `Bearer ${token}` },
+        body: payload
+      });
+      if (!res.ok || !data.exito) return NotificationService.apiError(res, data, "No se pudo editar el título.");
+      editarModal.classList.add("hidden");
+      documentoEditandoId = null;
+      NotificationService.success("Documento actualizado", "Los cambios se guardaron correctamente.");
+      await cargarDocumentos();
+    } catch (_) { NotificationService.error("Sin conexión", "No fue posible guardar los cambios."); }
   });
 
   cargarDocumentos();

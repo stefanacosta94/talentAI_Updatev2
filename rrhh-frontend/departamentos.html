@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>Departamentos - TalentAI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex">
+
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex z-10">
+      <div class="flex-1 min-h-0 overflow-y-auto">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md shadow-blue-600/20">
+              <i class="fa-solid fa-brain text-xs"></i>
+            </div>
+            <span class="font-extrabold text-blue-950 tracking-tight text-lg">TalentAI</span>
+          </div>
+        </div>
+        <div class="px-4 py-4">
+          <p class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Workspace</p>
+          <nav class="space-y-4" aria-label="Navegación administrativa">
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Espacio de trabajo</p>
+    <div class="space-y-0.5">
+      <a href="dashboard.html#seccion-resumen" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+      </a>
+      <a href="dashboard.html#seccion-vacantes" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+      </a>
+      <a href="candidatos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos ATS
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Administración</p>
+    <div class="space-y-0.5">
+      <a href="empleados.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+      </a>
+      <a href="cargos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-user-tie w-4 text-center"></i> Cargos laborales
+      </a>
+      <a href="departamentos.html" aria-current="page" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-blue-50 border-blue-100 text-blue-700">
+        <i class="fa-solid fa-building w-4 text-center"></i> Departamentos
+      </a>
+      <a href="usuarios.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-gear w-4 text-center"></i> Usuarios
+      </a>
+      <a href="roles.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-shield-halved w-4 text-center"></i> Roles y permisos
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Conocimiento e IA</p>
+    <div class="space-y-0.5">
+      <a href="conocimiento.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-folder-open w-4 text-center"></i> Documentos y políticas
+      </a>
+      <a href="chat-empleado.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-comments w-4 text-center"></i> Asistente IA
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Control</p>
+    <div class="space-y-0.5">
+      <a href="bitacora.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+      </a>
+    </div>
+  </div>
+</nav>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100">
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="truncate">
+              <p id="info-admin" class="text-xs font-bold text-slate-800 truncate">Cargando...</p>
+              <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Administrador</p>
+            </div>
+          </div>
+          <button id="btn-logout" class="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer shrink-0" title="Cerrar Sesión">
+            <i class="fa-solid fa-power-off text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+<div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+<header class="h-16 shrink-0 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center text-xs font-bold text-slate-600">Administración <i class="fa-solid fa-chevron-right text-[9px] text-slate-300 mx-3"></i> <span class="text-blue-900">Departamentos</span></header>
+<main class="flex-1 overflow-y-auto bg-origami p-4 sm:p-8">
+<div class="max-w-7xl mx-auto space-y-6">
+<div><h1 class="text-2xl font-black text-blue-950">Departamentos</h1><p class="text-xs text-slate-500 mt-1">Administración de unidades de la estructura organizacional.</p></div>
+<section class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+  <div class="flex justify-between items-center gap-3"><div><h2 class="text-sm font-extrabold text-blue-950">Catálogo de departamentos</h2><p class="text-xs text-slate-500 mt-1">Los departamentos pueden tener empleados y vacantes asociados.</p></div><span id="total-departamentos" class="text-xs text-slate-500">0 departamentos</span></div>
+  <form id="form-departamento" class="flex flex-wrap items-center gap-3">
+    <input id="departamento-nombre" type="text" required minlength="2" maxlength="120" aria-label="Nombre del departamento" placeholder="Ej. Recursos Humanos" class="flex-1 min-w-[200px] px-4 py-2.5 border border-slate-200 rounded-xl text-xs" />
+    <button id="btn-guardar-departamento" type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold">Crear departamento</button>
+    <button id="btn-limpiar-departamento" type="button" class="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold">Cancelar edición</button>
+  </form>
+  <input id="buscar-departamento" type="search" placeholder="Buscar departamento..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs" aria-label="Buscar departamentos" />
+  <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-slate-50 uppercase text-slate-500 tracking-widest text-[10px]"><tr><th class="p-4 text-left">ID</th><th class="p-4 text-left">Nombre del departamento</th><th class="p-4 text-right">Acciones</th></tr></thead><tbody id="tabla-departamentos-body"><tr><td colspan="3" class="p-6 text-center">Cargando departamentos...</td></tr></tbody></table></div>
+</section>
+</div>
+</main></div>
+<script src="js/config.js"></script>
+<script src="js/departamentos.js"></script>
+</body></html>

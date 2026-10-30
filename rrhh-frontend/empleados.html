@@ -24,7 +24,7 @@
     <aside
       class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex z-10"
     >
-      <div>
+      <div class="flex-1 min-h-0 overflow-y-auto">
         <div class="h-16 flex items-center px-6 border-b border-slate-100">
           <div class="flex items-center gap-2">
             <div
@@ -37,35 +37,67 @@
             >
           </div>
         </div>
-        <div class="px-4 py-6">
+        <div class="px-4 py-4">
           <p
             class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"
           >
             Workspace
           </p>
-          <nav class="space-y-1">
-            <a href="dashboard.html#seccion-resumen" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
-            </a>
-            <a href="dashboard.html#seccion-vacantes" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
-            </a>
-            <a href="candidatos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos (ATS)
-            </a>
-            <a href="empleados.html" class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-blue-600 bg-blue-50 border border-blue-100">
-              <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
-            </a>
-            <a href="conocimiento.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-book w-4 text-center"></i> Base Conocimiento IA
-            </a>
-            <a href="usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-shield-halved w-4 text-center"></i> Control de Accesos
-            </a>
-            <a href="bitacora.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
-            </a>
-          </nav>
+          <nav class="space-y-4" aria-label="Navegación administrativa">
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Espacio de trabajo</p>
+    <div class="space-y-0.5">
+      <a href="dashboard.html#seccion-resumen" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+      </a>
+      <a href="dashboard.html#seccion-vacantes" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+      </a>
+      <a href="candidatos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos ATS
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Administración</p>
+    <div class="space-y-0.5">
+      <a href="empleados.html" aria-current="page" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-blue-50 border-blue-100 text-blue-700">
+        <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+      </a>
+      <a href="cargos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-user-tie w-4 text-center"></i> Cargos laborales
+      </a>
+      <a href="departamentos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-building w-4 text-center"></i> Departamentos
+      </a>
+      <a href="usuarios.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-gear w-4 text-center"></i> Usuarios
+      </a>
+      <a href="roles.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-shield-halved w-4 text-center"></i> Roles y permisos
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Conocimiento e IA</p>
+    <div class="space-y-0.5">
+      <a href="conocimiento.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-folder-open w-4 text-center"></i> Documentos y políticas
+      </a>
+      <a href="chat-empleado.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-comments w-4 text-center"></i> Asistente IA
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Control</p>
+    <div class="space-y-0.5">
+      <a href="bitacora.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+      </a>
+    </div>
+  </div>
+</nav>
         </div>
       </div>
       <div class="p-4 border-t border-slate-100">
@@ -117,9 +149,9 @@
           <span class="text-blue-950 font-bold">Gestión de Empleados</span>
         </div>
         <div class="flex items-center gap-2">
-        <button type="button" id="btn-administrar-cargos" class="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 text-xs font-bold rounded-xl transition-all">
+        <a href="cargos.html" id="btn-administrar-cargos" class="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 text-xs font-bold rounded-xl transition-all">
           <i class="fa-solid fa-sitemap"></i> Administrar cargos
-        </button>
+        </a>
         <button
           id="btn-nuevo-empleado"
           class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20"
@@ -427,24 +459,7 @@
       </div>
     </div>
 
-    <!-- MODAL: ADMINISTRACIÓN DE CARGOS LABORALES -->
-    <div id="modal-cargos" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-cargos-titulo">
-      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 p-6 space-y-4 max-h-[85vh] overflow-y-auto">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <h3 id="modal-cargos-titulo" class="text-base font-extrabold text-blue-950">Administrar cargos laborales</h3>
-            <p class="text-xs text-slate-500">Los cargos no conceden permisos de acceso al sistema.</p>
-          </div>
-          <button id="btn-cerrar-cargos" type="button" aria-label="Cerrar" class="rounded-lg bg-slate-100 text-slate-600 w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <form id="form-cargo" class="flex flex-col sm:flex-row gap-2">
-          <input id="cargo-nombre" type="text" required minlength="2" maxlength="120" placeholder="Ej. Analista de RRHH" class="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs" />
-          <button id="btn-guardar-cargo" type="submit" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Agregar cargo</button>
-          <button id="btn-cancelar-cargo" type="button" class="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">Limpiar</button>
-        </form>
-        <div id="lista-cargos" class="max-h-72 overflow-y-auto"><p class="text-xs text-slate-500">Cargando cargos...</p></div>
-      </div>
-    </div>
+
 
     <!-- Scripts -->
     <script src="js/config.js"></script>

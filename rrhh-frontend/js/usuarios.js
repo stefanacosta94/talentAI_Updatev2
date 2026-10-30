@@ -29,11 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnNuevoUsuario = document.getElementById("btn-nuevo-usuario");
   const btnCancelarUsuario = document.getElementById("btn-cancelar-usuario");
   
-  const modalRol = document.getElementById("modal-rol");
-  const btnCancelarRol = document.getElementById("btn-cancelar-rol");
-  const btnGuardarRol = document.getElementById("btn-guardar-rol");
-
   let usuariosGlobales = [];
+  let usuarioEditandoId = null;
 
   async function fetchJson(url, options) {
     const res = await fetch(url, options);
@@ -73,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td class="py-4 px-6"><span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${rolClase}">${SecurityUtils.escapeHTML(usr.rol)}</span></td>
         <td class="py-4 px-6 text-slate-500">${fecha}</td>
         <td class="py-4 px-6 text-right">
-          <button data-action="rol" data-id="${usr.id}" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold rounded-lg mr-2 transition-all">Rol</button>
+          <button data-action="editar" data-id="${usr.id}" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold rounded-lg mr-2 transition-all">Editar</button>
           <button data-action="eliminar" data-id="${usr.id}" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold rounded-lg transition-all" ${usr.id === usuario.id ? 'disabled title="No puedes eliminarte a ti mismo"' : ''}>Eliminar</button>
         </td>
       `;
@@ -81,14 +78,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  btnNuevoUsuario?.addEventListener("click", () => {
-    formContainer.classList.toggle("hidden");
+  function resetFormulario() {
+    usuarioEditandoId = null;
     formUsuario.reset();
+    document.getElementById("form-usuario-titulo").textContent = "Crear nuevo usuario";
+    document.getElementById("usr-password-label").textContent = "Contraseña *";
+    document.getElementById("usr-password").required = true;
+    document.getElementById("usr-rol-wrapper").classList.remove("hidden");
+  }
+
+  btnNuevoUsuario?.addEventListener("click", () => {
+    resetFormulario();
+    formContainer.classList.remove("hidden");
   });
 
   btnCancelarUsuario?.addEventListener("click", () => {
     formContainer.classList.add("hidden");
-    formUsuario.reset();
+    resetFormulario();
   });
 
   formUsuario?.addEventListener("submit", async (e) => {
@@ -97,20 +103,21 @@ document.addEventListener("DOMContentLoaded", () => {
       nombre: document.getElementById("usr-nombre").value,
       email: document.getElementById("usr-email").value,
       password: document.getElementById("usr-password").value,
-      rol: document.getElementById("usr-rol").value
     };
+    if (!usuarioEditandoId) payload.rol = document.getElementById("usr-rol").value;
+    const esEdicion = Boolean(usuarioEditandoId);
 
     try {
-      const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/usuarios`, {
-        method: "POST",
+      const { res, data } = await fetchJson(esEdicion ? `${CONFIG.API_URL}/admin/usuarios/${usuarioEditandoId}` : `${CONFIG.API_URL}/admin/usuarios`, {
+        method: esEdicion ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
       if (res.ok && data.exito) {
         formContainer.classList.add("hidden");
-        formUsuario.reset();
+        resetFormulario();
         await cargarUsuarios();
-        NotificationService.success("Usuario creado", "El acceso fue creado correctamente.");
+        NotificationService.success(esEdicion ? "Usuario actualizado" : "Usuario creado", "El registro se guardó correctamente.");
       } else {
         NotificationService.apiError(res, data, "No fue posible crear el usuario.");
       }
@@ -127,12 +134,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const id = btn.dataset.id;
     const usr = usuariosGlobales.find(x => String(x.id) === String(id));
 
-    if (action === "rol" && usr) {
-      document.getElementById("modal-rol-user-id").value = id;
-      document.getElementById("modal-rol-nombre").innerText = usr.nombre;
-      document.getElementById("modal-rol-select").value = usr.rol;
-      modalRol.classList.remove("hidden");
-    } else if (action === "eliminar") {
+    if (action === "editar" && usr) {
+      resetFormulario();
+      usuarioEditandoId = usr.id;
+      document.getElementById("form-usuario-titulo").textContent = "Editar usuario";
+      document.getElementById("usr-nombre").value = usr.nombre;
+      document.getElementById("usr-email").value = usr.email;
+      document.getElementById("usr-password-label").textContent = "Nueva contraseña (opcional)";
+      document.getElementById("usr-password").required = false;
+      document.getElementById("usr-rol-wrapper").classList.add("hidden");
+      formContainer.classList.remove("hidden");
+      formContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (action === "eliminar" && usr) {
       if (confirm(`¿Estás seguro de eliminar el acceso a ${SecurityUtils.escapeHTML(usr.nombre)}?`)) {
         try {
           const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/usuarios/${id}`, {
@@ -153,29 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  btnCancelarRol?.addEventListener("click", () => modalRol.classList.add("hidden"));
-  
-  btnGuardarRol?.addEventListener("click", async () => {
-    const id = document.getElementById("modal-rol-user-id").value;
-    const nuevo_rol = document.getElementById("modal-rol-select").value;
-    try {
-      const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/usuarios/${id}/rol`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ nuevo_rol })
-      });
-      if (res.ok && data.exito) {
-        modalRol.classList.add("hidden");
-        await cargarUsuarios();
-        NotificationService.success("Rol actualizado", "Los permisos del usuario fueron actualizados.");
-      } else {
-        NotificationService.apiError(res, data, "No fue posible cambiar el rol.");
-      }
-    } catch (e) {
-      console.error("Error cambiando rol:", e);
-      NotificationService.error("No pudimos cambiar el rol", "Intenta nuevamente en unos segundos.");
-    }
-  });
 
   document.getElementById("buscador-usuarios")?.addEventListener("input", (e) => {
     const term = e.target.value.toLowerCase();

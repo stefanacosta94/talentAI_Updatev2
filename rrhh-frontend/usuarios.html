@@ -7,7 +7,7 @@
       http-equiv="Cache-Control"
       content="no-cache, no-store, must-revalidate"
     />
-    <title>Control de Accesos - TalentAI</title>
+    <title>Administración de Usuarios - TalentAI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -22,7 +22,7 @@
     <aside
       class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex z-10"
     >
-      <div>
+      <div class="flex-1 min-h-0 overflow-y-auto">
         <div class="h-16 flex items-center px-6 border-b border-slate-100">
           <div class="flex items-center gap-2">
             <div
@@ -35,35 +35,67 @@
             >
           </div>
         </div>
-        <div class="px-4 py-6">
+        <div class="px-4 py-4">
           <p
             class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"
           >
             Workspace
           </p>
-          <nav class="space-y-1">
-            <a href="dashboard.html#seccion-resumen" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
-            </a>
-            <a href="dashboard.html#seccion-vacantes" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
-            </a>
-            <a href="candidatos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos (ATS)
-            </a>
-            <a href="empleados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
-            </a>
-            <a href="conocimiento.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-book w-4 text-center"></i> Base Conocimiento IA
-            </a>
-            <a href="usuarios.html" class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-blue-600 bg-blue-50 border border-blue-100">
-              <i class="fa-solid fa-shield-halved w-4 text-center"></i> Control de Accesos
-            </a>
-            <a href="bitacora.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
-            </a>
-          </nav>
+          <nav class="space-y-4" aria-label="Navegación administrativa">
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Espacio de trabajo</p>
+    <div class="space-y-0.5">
+      <a href="dashboard.html#seccion-resumen" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+      </a>
+      <a href="dashboard.html#seccion-vacantes" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+      </a>
+      <a href="candidatos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos ATS
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Administración</p>
+    <div class="space-y-0.5">
+      <a href="empleados.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+      </a>
+      <a href="cargos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-user-tie w-4 text-center"></i> Cargos laborales
+      </a>
+      <a href="departamentos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-building w-4 text-center"></i> Departamentos
+      </a>
+      <a href="usuarios.html" aria-current="page" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-blue-50 border-blue-100 text-blue-700">
+        <i class="fa-solid fa-users-gear w-4 text-center"></i> Usuarios
+      </a>
+      <a href="roles.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-shield-halved w-4 text-center"></i> Roles y permisos
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Conocimiento e IA</p>
+    <div class="space-y-0.5">
+      <a href="conocimiento.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-folder-open w-4 text-center"></i> Documentos y políticas
+      </a>
+      <a href="chat-empleado.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-comments w-4 text-center"></i> Asistente IA
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Control</p>
+    <div class="space-y-0.5">
+      <a href="bitacora.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+      </a>
+    </div>
+  </div>
+</nav>
         </div>
       </div>
       <div class="p-4 border-t border-slate-100">
@@ -111,7 +143,7 @@
         >
           <span>Workspace</span>
           <i class="fa-solid fa-chevron-right text-[8px] text-slate-300"></i>
-          <span class="text-blue-950 font-bold">Control de Accesos</span>
+          <span class="text-blue-950 font-bold">Administración de Usuarios</span>
         </div>
         <button
           id="btn-nuevo-usuario"
@@ -125,10 +157,10 @@
         <div class="max-w-7xl mx-auto space-y-6">
           <div>
             <h1 class="text-2xl font-black text-blue-950 tracking-tight">
-              Control de Accesos
+              Administración de Usuarios
             </h1>
             <p class="text-xs text-slate-500 font-medium mt-1">
-              Gestión de credenciales y roles de los usuarios de la plataforma.
+              Crea, consulta, modifica y elimina cuentas. La asignación de roles se administra en su propia vista.
             </p>
           </div>
 
@@ -140,9 +172,8 @@
               class="fa-solid fa-triangle-exclamation text-orange-500 text-lg shrink-0"
             ></i>
             <p class="text-xs font-semibold text-orange-700">
-              <strong>Zona sensible:</strong> Los cambios de rol y contraseña
-              tienen efecto inmediato. Actúa con precaución y registra las
-              acciones en la bitácora.
+              <strong>Zona sensible:</strong> los cambios de contraseña y la eliminación de cuentas
+              tienen efecto inmediato. Los roles se administran desde <a class="underline" href="roles.html">Roles y permisos</a>.
             </p>
           </div>
 
@@ -185,7 +216,7 @@
                 />
               </div>
               <div>
-                <label
+                <label id="usr-password-label"
                   class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
                   >Contraseña *</label
                 >
@@ -196,7 +227,7 @@
                   class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                 />
               </div>
-              <div>
+              <div id="usr-rol-wrapper">
                 <label
                   class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
                   >Rol del usuario</label
@@ -299,54 +330,7 @@
         </div>
       </main>
     </div>
-
-    <!-- MODAL: CAMBIAR ROL -->
-    <div
-      id="modal-rol"
-      class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    >
-      <div
-        class="bg-white rounded-3xl shadow-2xl w-full max-w-sm border border-slate-200 p-6 space-y-4"
-      >
-        <h3 class="text-base font-extrabold text-blue-950">
-          Cambiar Rol de Usuario
-        </h3>
-        <p class="text-xs text-slate-500">
-          Cambiando rol para:
-          <strong id="modal-rol-nombre" class="text-slate-700"></strong>
-        </p>
-        <input type="hidden" id="modal-rol-user-id" />
-        <div>
-          <label
-            class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
-            >Nuevo rol</label
-          >
-          <select
-            id="modal-rol-select"
-            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
-          >
-            <option value="empleado">Empleado</option>
-            <option value="admin">Administrador</option>
-          </select>
-        </div>
-        <div class="flex gap-3">
-          <button
-            id="btn-cancelar-rol"
-            class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
-          >
-            Cancelar
-          </button>
-          <button
-            id="btn-guardar-rol"
-            class="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all"
-          >
-            <i class="fa-solid fa-shield-halved mr-1.5"></i> Aplicar Cambio
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <script src="js/config.js"></script>
+<script src="js/config.js"></script>
     <script src="js/usuarios.js"></script>
   </body>
 </html>

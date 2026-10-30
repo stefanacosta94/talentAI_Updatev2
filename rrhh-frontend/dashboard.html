@@ -42,35 +42,67 @@
         </div>
 
         <!-- Navegación Workspace -->
-        <div class="px-4 py-6">
+        <div class="px-4 py-4">
           <p
             class="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3"
           >
             Workspace
           </p>
-          <nav class="space-y-1">
-            <a href="#seccion-resumen" data-target="seccion-resumen" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 border border-transparent hover:bg-slate-50">
-              <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
-            </a>
-            <a href="#seccion-vacantes" data-target="seccion-vacantes" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 border border-transparent hover:bg-slate-50">
-              <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
-            </a>
-            <a href="candidatos.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos (ATS)
-            </a>
-            <a href="empleados.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
-            </a>
-            <a href="conocimiento.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-book w-4 text-center"></i> Base Conocimiento IA
-            </a>
-            <a href="usuarios.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-shield-halved w-4 text-center"></i> Control de Accesos
-            </a>
-            <a href="bitacora.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50">
-              <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
-            </a>
-          </nav>
+          <nav class="space-y-4" aria-label="Navegación administrativa">
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Espacio de trabajo</p>
+    <div class="space-y-0.5">
+      <a href="#seccion-resumen" data-target="seccion-resumen" class="nav-link border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-chart-pie w-4 text-center"></i> Dashboard
+      </a>
+      <a href="#seccion-vacantes" data-target="seccion-vacantes" class="nav-link border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-briefcase w-4 text-center"></i> Vacantes
+      </a>
+      <a href="candidatos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Candidatos ATS
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Administración</p>
+    <div class="space-y-0.5">
+      <a href="empleados.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-id-card-clip w-4 text-center"></i> Empleados
+      </a>
+      <a href="cargos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-user-tie w-4 text-center"></i> Cargos laborales
+      </a>
+      <a href="departamentos.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-building w-4 text-center"></i> Departamentos
+      </a>
+      <a href="usuarios.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-users-gear w-4 text-center"></i> Usuarios
+      </a>
+      <a href="roles.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-shield-halved w-4 text-center"></i> Roles y permisos
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Conocimiento e IA</p>
+    <div class="space-y-0.5">
+      <a href="conocimiento.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-folder-open w-4 text-center"></i> Documentos y políticas
+      </a>
+      <a href="chat-empleado.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-comments w-4 text-center"></i> Asistente IA
+      </a>
+    </div>
+  </div>
+  <div>
+    <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Control</p>
+    <div class="space-y-0.5">
+      <a href="bitacora.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
+      </a>
+    </div>
+  </div>
+</nav>
         </div>
       </div>
 

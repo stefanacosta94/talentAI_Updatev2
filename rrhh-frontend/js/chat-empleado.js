@@ -13,14 +13,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const usuario = AuthService.obtenerUsuario();
     const token = AuthService.obtenerToken();
 
-    // Mostrar nombre del empleado
+    // Un solo chat de pantalla completa para empleados y administradores.
+    // Las opciones CRUD solo se muestran a administradores; las rutas API aplican autorización real.
+    if (AuthService.esAdmin()) {
+        const sidebar = document.getElementById("admin-chat-sidebar");
+        if (sidebar) sidebar.classList.add("md:flex");
+        const adminName = document.getElementById("info-admin");
+        if (adminName) adminName.textContent = usuario?.nombre || "Administrador";
+    }
+
+    // Mostrar nombre de la sesión
     if (usuario) {
         const infoEmpleado = document.getElementById("info-empleado-nombre");
         if (infoEmpleado) infoEmpleado.textContent = `Hola, ${usuario.nombre.split(" ")[0]}`;
     }
 
     // Cerrar sesión
-    document.getElementById("btn-logout")?.addEventListener("click", () => AuthService.cerrarSesion());
+    document.querySelectorAll("#btn-logout, #btn-logout-admin").forEach(button => button.addEventListener("click", () => AuthService.cerrarSesion()));
 
     // 2. Referencias del Chat
     const chatHistorial = document.getElementById("chat-historial");
@@ -62,33 +71,35 @@ document.addEventListener("DOMContentLoaded", () => {
     function agregarMensajeUsuario(texto) {
         const div = document.createElement("div");
         div.className = "flex items-end justify-end gap-3 w-full";
-        div.innerHTML = `
-            <div class="bg-blue-600 px-5 py-3.5 rounded-2xl rounded-br-none text-sm text-white shadow-md max-w-[85%]">
-                ${texto.replace(/\n/g, '<br>')}
-            </div>
-            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 shrink-0 text-xs font-bold">
-                ${usuario.nombre.charAt(0).toUpperCase()}
-            </div>
-        `;
+        const burbuja = document.createElement("div");
+        burbuja.className = "bg-blue-600 px-5 py-3.5 rounded-2xl rounded-br-none text-sm text-white shadow-md max-w-[85%] whitespace-pre-wrap break-words";
+        burbuja.textContent = texto;
+        const avatar = document.createElement("div");
+        avatar.className = "w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 shrink-0 text-xs font-bold";
+        avatar.textContent = (usuario?.nombre || "U").charAt(0).toUpperCase();
+        div.append(burbuja, avatar);
         chatHistorial.appendChild(div);
         hacerScrollAbajo();
     }
 
     function agregarMensajeIA(texto) {
-        // Formatear markdown básico (negritas y saltos de línea)
-        let textoFormateado = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        textoFormateado = textoFormateado.replace(/\n/g, '<br>');
-
+        // No insertar HTML generado por el modelo: la salida de IA no es confiable.
         const div = document.createElement("div");
-        div.className = "flex items-end gap-3 max-w-[85%]";
-        div.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                <i class="fa-solid fa-robot text-xs"></i>
-            </div>
-            <div class="bg-slate-50 border border-slate-100 px-5 py-3.5 rounded-2xl rounded-bl-none text-sm text-slate-700 shadow-sm leading-relaxed">
-                ${textoFormateado}
-            </div>
-        `;
+        div.className = "flex items-end gap-3 max-w-[92%]";
+        const avatar = document.createElement("div");
+        avatar.className = "w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0";
+        avatar.innerHTML = '<i class="fa-solid fa-robot text-xs"></i>';
+        const burbuja = document.createElement("div");
+        burbuja.className = "bg-slate-50 border border-slate-100 px-5 py-3.5 rounded-2xl rounded-bl-none text-sm text-slate-700 shadow-sm leading-relaxed whitespace-pre-wrap break-words";
+        // Formato limitado en texto: soporta **negritas**, sin interpretar HTML.
+        String(texto ?? "").split(/(\*\*[^*]+\*\*)/g).forEach(fragmento => {
+            if (fragmento.startsWith("**") && fragmento.endsWith("**")) {
+                const strong = document.createElement("strong");
+                strong.textContent = fragmento.slice(2, -2);
+                burbuja.appendChild(strong);
+            } else burbuja.appendChild(document.createTextNode(fragmento));
+        });
+        div.append(avatar, burbuja);
         chatHistorial.appendChild(div);
         hacerScrollAbajo();
     }
@@ -162,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
             removerIndicadorEscribiendo();
-            agregarMensajeIA(`❌ **Error de conexión:** No pude comunicarme con el servidor. Por favor, intenta de nuevo más tarde.\nDetalle: ${error.message}`);
+            agregarMensajeIA("No fue posible completar la consulta en este momento. Verifica tu conexión e inténtalo nuevamente.");
         } finally {
             // Rehabilitar input
             inputPregunta.focus();

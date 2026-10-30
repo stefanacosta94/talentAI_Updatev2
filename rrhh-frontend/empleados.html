@@ -116,12 +116,17 @@
           <i class="fa-solid fa-chevron-right text-[8px] text-slate-300"></i>
           <span class="text-blue-950 font-bold">Gestión de Empleados</span>
         </div>
+        <div class="flex items-center gap-2">
+        <button type="button" id="btn-administrar-cargos" class="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 text-xs font-bold rounded-xl transition-all">
+          <i class="fa-solid fa-sitemap"></i> Administrar cargos
+        </button>
         <button
           id="btn-nuevo-empleado"
           class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20"
         >
           <i class="fa-solid fa-plus"></i> Nuevo Empleado
         </button>
+        </div>
       </header>
 
       <!-- Área de Contenido -->
@@ -212,7 +217,7 @@
               <select id="filtro-depto-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Todas las áreas</option>
               </select>
-              <select id="filtro-rol-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
+              <select id="filtro-cargo-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Todos los puestos</option>
               </select>
               <select id="filtro-estado-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
@@ -249,13 +254,14 @@
                     <th
                       class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
-                      Puesto
+                      Cargo laboral
                     </th>
                     <th
                       class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Ingreso
                     </th>
+                    <th class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]">Cuenta de acceso</th>
                     <th
                       class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
@@ -270,7 +276,7 @@
                 </thead>
                 <tbody id="tabla-empleados-body">
                   <tr>
-                    <td colspan="7" class="py-12 text-center">
+                    <td colspan="8" class="py-12 text-center">
                       <i
                         class="fa-solid fa-circle-notch fa-spin text-blue-400 text-2xl"
                       ></i>
@@ -293,7 +299,7 @@
       class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
-        class="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200"
+        class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-slate-200"
       >
         <div
           class="flex items-center justify-between p-6 border-b border-slate-100"
@@ -384,16 +390,22 @@
             <div>
               <label
                 class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
-                >Puesto / Rol *</label
+                >Cargo laboral</label
               >
               <select
-                id="emp-rol"
-                required
+                id="emp-cargo"
                 class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all"
               >
-                <option value="">Selecciona un puesto</option>
+                <option value="">Sin cargo asignado</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label for="emp-usuario" class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Cuenta de acceso (opcional)</label>
+            <select id="emp-usuario" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600">
+              <option value="">Sin cuenta vinculada</option>
+            </select>
+            <p class="mt-1 text-[11px] text-slate-500">Selecciona una cuenta existente. Vincularla no modifica sus permisos de acceso.</p>
           </div>
           <div class="flex gap-3 pt-2">
             <button
@@ -412,6 +424,25 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- MODAL: ADMINISTRACIÓN DE CARGOS LABORALES -->
+    <div id="modal-cargos" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-cargos-titulo">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h3 id="modal-cargos-titulo" class="text-base font-extrabold text-blue-950">Administrar cargos laborales</h3>
+            <p class="text-xs text-slate-500">Los cargos no conceden permisos de acceso al sistema.</p>
+          </div>
+          <button id="btn-cerrar-cargos" type="button" aria-label="Cerrar" class="rounded-lg bg-slate-100 text-slate-600 w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-cargo" class="flex flex-col sm:flex-row gap-2">
+          <input id="cargo-nombre" type="text" required minlength="2" maxlength="120" placeholder="Ej. Analista de RRHH" class="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs" />
+          <button id="btn-guardar-cargo" type="submit" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Agregar cargo</button>
+          <button id="btn-cancelar-cargo" type="button" class="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">Limpiar</button>
+        </form>
+        <div id="lista-cargos" class="max-h-72 overflow-y-auto"><p class="text-xs text-slate-500">Cargando cargos...</p></div>
       </div>
     </div>
 

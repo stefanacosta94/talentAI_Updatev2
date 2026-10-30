@@ -11,6 +11,7 @@ const { uploadPrivatePdf, createSignedUrl, removeStoredObject } = require('../se
 const { ATS_APPLICATION_STATES } = require('../constants/ats');
 const { withSupabaseRetry, createSupabaseError } = require('../utils/supabaseRetry');
 const { normalizeEmail, isValidEmail, isStrongEnoughPassword, isAllowedRole, validatePdfFile, safeFileComponent } = require('../security/securityUtils');
+const { cleanCargoName, optionalPositiveInteger, employeePayload, employeeWriteError } = require('../services/orgValidation');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
@@ -181,44 +182,77 @@ router.delete('/usuarios/:id', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-// ========== EMPLEADOS ==========
+// ========== EMPLEADOS ========== 
+// La cuenta de acceso es opcional. Su asociación depende exclusivamente de empleados.id_usuario.
+const EMPLEADO_SELECT = 'id_empleado, id_usuario, id_departamento, id_cargo, nombre, correo, fecha_contratacion, estado, departamentos(id_departamento, nombre), cargos(id_cargo, nombre), cuenta:usuarios!empleados_id_usuario_fkey(id,nombre,email,rol)';
+
+function sendEmployeeDbError(res, error) {
+  const known = employeeWriteError(error);
+  if (!known) return false;
+  res.status(known.status).json({ exito: false, error: known.message });
+  return true;
+}
+
 router.post('/empleados', async (req, res, next) => {
   try {
-    const { nombre, correo, fecha_contratacion, id_departamento, id_rol, estado } = req.body;
-    if (!nombre || !correo || !fecha_contratacion) return res.status(400).json({ exito: false, error: 'Nombre, correo y fecha de contratación son obligatorios.' });
-    const { data: nuevoEmpleado, error } = await supabase.from('empleados').insert([{ nombre, correo, fecha_contratacion, id_departamento: id_departamento || null, id_rol: id_rol || null, estado: estado || 'Activo' }]).select();
-    if (error) throw new Error(error.message);
-    await registrarAuditoria(req.usuario.id, 'Alta de Empleado', 'Empleados', `Se registró al empleado: ${nombre}`);
-    res.status(201).json({ exito: true, mensaje: 'Empleado registrado en RR.HH.', empleado: nuevoEmpleado[0] });
+    let payload;
+    try { payload = employeePayload(req.body); }
+    catch (error) { return res.status(error.status || 400).json({ exito: false, error: error.message }); }
+    const { data, error } = await supabase.from('empleados')
+      .insert([payload]).select('id_empleado, id_usuario, nombre, correo, id_cargo, estado').single();
+    if (error) {
+      if (sendEmployeeDbError(res, error)) return;
+      throw createSupabaseError(error, 'No fue posible registrar el empleado');
+    }
+    await registrarAuditoria(req.usuario.id, 'Alta de Empleado', 'Empleados', `Se registró al empleado ID: ${data.id_empleado}`);
+    res.status(201).json({ exito: true, mensaje: 'Empleado registrado en RR.HH.', empleado: data });
   } catch (error) { next(error); }
 });
 
 router.get('/empleados', async (req, res, next) => {
   try {
-    const { data: empleados, error } = await withSupabaseRetry(
-      () => supabase.from('empleados').select('id_empleado, nombre, correo, fecha_contratacion, estado, departamentos (nombre), roles (nombre_rol)').order('fecha_contratacion', { ascending: false }),
-      { label: 'Carga de empleados' },
+    const { data, error } = await withSupabaseRetry(
+      () => supabase.from('empleados').select(EMPLEADO_SELECT).order('fecha_contratacion', { ascending: false }),
+      { label: 'Carga de empleados y cuentas vinculadas' },
     );
     if (error) throw createSupabaseError(error, 'No fue posible cargar los empleados');
-    res.json({ exito: true, total: empleados.length, empleados });
+    res.json({ exito: true, total: data.length, empleados: data });
   } catch (error) { next(error); }
 });
 
 router.put('/empleados/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { nombre, correo, fecha_contratacion, id_departamento, id_rol, estado } = req.body;
-    const { data, error } = await supabase.from('empleados').update({ nombre, correo, fecha_contratacion, id_departamento, id_rol, estado }).eq('id_empleado', id).select();
-    if (error) throw new Error(error.message);
-    res.json({ exito: true, mensaje: 'Empleado actualizado correctamente.', empleado: data[0] });
+    let id;
+    try { id = optionalPositiveInteger(req.params.id, 'id_empleado'); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    if (!id) return res.status(400).json({ exito: false, error: 'ID de empleado inválido.' });
+    let changes;
+    try { changes = employeePayload(req.body, { partial: true }); }
+    catch (error) { return res.status(error.status || 400).json({ exito: false, error: error.message }); }
+    const { data, error } = await supabase.from('empleados').update(changes)
+      .eq('id_empleado', id).select('id_empleado, id_usuario, nombre, correo, id_cargo, estado').maybeSingle();
+    if (error) {
+      if (sendEmployeeDbError(res, error)) return;
+      throw createSupabaseError(error, 'No fue posible actualizar el empleado');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Empleado no encontrado.' });
+    await registrarAuditoria(req.usuario.id, 'Actualización de Empleado', 'Empleados', `Empleado actualizado ID: ${id}`);
+    res.json({ exito: true, mensaje: 'Empleado actualizado correctamente.', empleado: data });
   } catch (error) { next(error); }
 });
 
 router.delete('/empleados/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { error } = await supabase.from('empleados').delete().eq('id_empleado', id);
-    if (error) throw new Error(error.message);
+    let id;
+    try { id = optionalPositiveInteger(req.params.id, 'id_empleado'); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    if (!id) return res.status(400).json({ exito: false, error: 'ID de empleado inválido.' });
+    const { data, error } = await supabase.from('empleados').delete().eq('id_empleado', id).select('id_empleado').maybeSingle();
+    if (error) {
+      if (error.code === '23503') return res.status(409).json({ exito: false, error: 'No se puede eliminar: el empleado tiene registros relacionados.' });
+      throw createSupabaseError(error, 'No fue posible eliminar el empleado');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Empleado no encontrado.' });
     await registrarAuditoria(req.usuario.id, 'Baja de Empleado', 'Empleados', `Se eliminó el empleado ID: ${id}`);
     res.json({ exito: true, mensaje: 'Empleado eliminado correctamente.' });
   } catch (error) { next(error); }
@@ -445,15 +479,78 @@ router.delete('/documentos/:id', async (req, res, next) => {
 });
 
 
-// ========== ROLES ==========
-router.get('/roles', async (req, res, next) => {
+// ========== CARGOS LABORALES ========== 
+// Importante: estos cargos NO otorgan permisos. RBAC sigue usando usuarios.rol.
+router.get('/cargos', async (req, res, next) => {
   try {
-    const { data: roles, error } = await withSupabaseRetry(
-      () => supabase.from('roles').select('id_rol, nombre_rol'),
-      { label: 'Carga de roles' },
+    const { data, error } = await withSupabaseRetry(
+      () => supabase.from('cargos').select('id_cargo, nombre').order('nombre', { ascending: true }),
+      { label: 'Carga del catálogo de cargos' },
     );
-    if (error) throw createSupabaseError(error, 'No fue posible cargar los roles');
-    res.json({ exito: true, roles });
+    if (error) throw createSupabaseError(error, 'No fue posible cargar los cargos');
+    res.json({ exito: true, cargos: data });
   } catch (error) { next(error); }
 });
+
+router.post('/cargos', async (req, res, next) => {
+  try {
+    let nombre;
+    try { nombre = cleanCargoName(req.body?.nombre); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    const { data, error } = await supabase.from('cargos').insert([{ nombre }]).select('id_cargo, nombre').single();
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ exito: false, error: 'Ese cargo ya existe.' });
+      if (error.code === '23514') return res.status(400).json({ exito: false, error: 'El nombre del cargo no es válido.' });
+      throw createSupabaseError(error, 'No fue posible crear el cargo');
+    }
+    await registrarAuditoria(req.usuario.id, 'Creación de Cargo', 'Cargos', `Se creó el cargo ID: ${data.id_cargo}`);
+    res.status(201).json({ exito: true, mensaje: 'Cargo creado correctamente.', cargo: data });
+  } catch (error) { next(error); }
+});
+
+router.put('/cargos/:id', async (req, res, next) => {
+  try {
+    let id, nombre;
+    try {
+      id = optionalPositiveInteger(req.params.id, 'id_cargo');
+      nombre = cleanCargoName(req.body?.nombre);
+    } catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    if (!id) return res.status(400).json({ exito: false, error: 'ID de cargo inválido.' });
+    const { data, error } = await supabase.from('cargos').update({ nombre })
+      .eq('id_cargo', id).select('id_cargo, nombre').maybeSingle();
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ exito: false, error: 'Ya existe un cargo con ese nombre.' });
+      if (error.code === '23514') return res.status(400).json({ exito: false, error: 'El nombre del cargo no es válido.' });
+      throw createSupabaseError(error, 'No fue posible actualizar el cargo');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Cargo no encontrado.' });
+    await registrarAuditoria(req.usuario.id, 'Edición de Cargo', 'Cargos', `Se actualizó el cargo ID: ${id}`);
+    res.json({ exito: true, mensaje: 'Cargo actualizado.', cargo: data });
+  } catch (error) { next(error); }
+});
+
+router.delete('/cargos/:id', async (req, res, next) => {
+  try {
+    let id;
+    try { id = optionalPositiveInteger(req.params.id, 'id_cargo'); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    if (!id) return res.status(400).json({ exito: false, error: 'ID de cargo inválido.' });
+    // No permitir eliminar un cargo que aún está asignado a empleados.
+    const { count, error: checkError } = await withSupabaseRetry(
+      () => supabase.from('empleados').select('id_empleado', { count: 'exact', head: true }).eq('id_cargo', id),
+      { label: 'Verificación de empleados asignados al cargo' },
+    );
+    if (checkError) throw createSupabaseError(checkError, 'No fue posible comprobar el uso del cargo');
+    if (count > 0) return res.status(409).json({ exito: false, error: 'No se puede eliminar un cargo asignado a empleados.' });
+    const { data, error } = await supabase.from('cargos').delete().eq('id_cargo', id).select('id_cargo').maybeSingle();
+    if (error) {
+      if (error.code === '23503') return res.status(409).json({ exito: false, error: 'No se puede eliminar: el cargo está en uso.' });
+      throw createSupabaseError(error, 'No fue posible eliminar el cargo');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Cargo no encontrado.' });
+    await registrarAuditoria(req.usuario.id, 'Eliminación de Cargo', 'Cargos', `Se eliminó el cargo ID: ${id}`);
+    res.json({ exito: true, mensaje: 'Cargo eliminado correctamente.' });
+  } catch (error) { next(error); }
+});
+
 module.exports = router;

@@ -34,7 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let empleadosGlobales = [];
   let departamentosGlobales = [];
-  let rolesGlobales = [];
+  let cargosGlobales = [];
+  let usuariosGlobales = [];
+  let cuentasCargadas = false;
+  let cargoEditandoId = null;
   let empleadoEditandoId = null;
 
   async function fetchJson(url, options) {
@@ -62,23 +65,59 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) { console.error("Error al cargar departamentos", e); }
   }
 
-  async function cargarRoles() {
+  async function cargarCargos() {
     try {
-      const { data } = await fetchJson(`${CONFIG.API_URL}/admin/roles`, {
+      const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/cargos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (data.exito) {
-        rolesGlobales = data.roles;
-        const selectModal = document.getElementById("emp-rol");
-        const selectFiltro = document.getElementById("filtro-rol-empleado");
-        
-        const html = '<option value="">Sin puesto / Todos los puestos</option>' + 
-          rolesGlobales.map(r => `<option value="${r.id_rol}">${SecurityUtils.escapeHTML(r.nombre_rol)}</option>`).join('');
-        
-        if (selectModal) selectModal.innerHTML = html;
-        if (selectFiltro) selectFiltro.innerHTML = html;
+      if (!res.ok || !data.exito) throw new Error(data.error || "No fue posible cargar cargos.");
+      cargosGlobales = data.cargos;
+      const selectModal = document.getElementById("emp-cargo");
+      const selectFiltro = document.getElementById("filtro-cargo-empleado");
+      if (selectModal) {
+        selectModal.innerHTML = '<option value="">Sin cargo asignado</option>' +
+          cargosGlobales.map(c => `<option value="${c.id_cargo}">${SecurityUtils.escapeHTML(c.nombre)}</option>`).join("");
       }
-    } catch (e) { console.error("Error al cargar roles", e); }
+      if (selectFiltro) {
+        selectFiltro.innerHTML = '<option value="">Todos los cargos</option>' +
+          cargosGlobales.map(c => `<option value="${c.id_cargo}">${SecurityUtils.escapeHTML(c.nombre)}</option>`).join("");
+      }
+      renderizarCargos();
+    } catch (error) {
+      console.error("Error al cargar cargos:", error);
+      NotificationService.error("No se pudieron cargar los cargos", "Verifica la conexión e intenta nuevamente.");
+    }
+  }
+
+  async function cargarCuentas() {
+    try {
+      const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/usuarios`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok || !data.exito) throw new Error(data.error || "Error al cargar usuarios.");
+      usuariosGlobales = data.usuarios;
+      cuentasCargadas = true;
+    } catch (error) {
+      console.error("No fue posible obtener las cuentas:", error);
+      cuentasCargadas = false;
+      NotificationService.warning("Cuentas no disponibles", "Puedes gestionar empleados, pero la vinculación de cuentas estará desactivada.");
+    }
+  }
+
+  function poblarCuentas(empleadoId = null) {
+    const select = document.getElementById("emp-usuario");
+    if (!select) return;
+    select.disabled = !cuentasCargadas;
+    const actual = empleadosGlobales.find(e => String(e.id_empleado) === String(empleadoId));
+    const cuentasEnUso = new Set(
+      empleadosGlobales.filter(e => e.id_usuario && String(e.id_empleado) !== String(empleadoId))
+        .map(e => String(e.id_usuario))
+    );
+    select.innerHTML = '<option value="">Sin cuenta vinculada</option>' + usuariosGlobales
+      .filter(u => !cuentasEnUso.has(String(u.id)))
+      .map(u => `<option value="${SecurityUtils.escapeHTML(u.id)}">${SecurityUtils.escapeHTML(u.nombre)} — ${SecurityUtils.escapeHTML(u.email)} (${SecurityUtils.escapeHTML(u.rol)})</option>`)
+      .join("");
+    select.value = actual?.id_usuario || "";
   }
 
   async function cargarEmpleados() {
@@ -92,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         actualizarStats();
       }
     } catch (e) {
-      tablaBody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-rose-500">Error al cargar empleados</td></tr>`;
+      tablaBody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-rose-500">Error al cargar empleados</td></tr>`;
     }
   }
 
@@ -106,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderizarTabla(lista) {
     tablaBody.innerHTML = "";
     if (lista.length === 0) {
-      tablaBody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-slate-500">
+      tablaBody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-slate-500">
         <div class="flex flex-col items-center justify-center">
           <i class="fa-solid fa-users-slash text-4xl text-slate-300 mb-3"></i>
           <p>No se encontraron empleados que coincidan con los filtros.</p>
@@ -116,7 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     lista.forEach(emp => {
       const depto = emp.departamentos?.nombre || "N/A";
-      const puesto = emp.roles?.nombre_rol || "N/A";
+      const puesto = emp.cargos?.nombre || "Sin cargo";
+      const cuenta = emp.cuenta ? emp.cuenta.email : "Sin cuenta";
       
       const esActivo = emp.estado === "Activo";
       const estadoClase = esActivo 
@@ -148,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </td>
         <td class="py-3 px-6 text-slate-600 font-medium">${SecurityUtils.escapeHTML(puesto)}</td>
         <td class="py-3 px-6 text-slate-500 text-xs">${SecurityUtils.escapeHTML(fecha)}</td>
+        <td class="py-3 px-6 text-slate-500 text-xs">${SecurityUtils.escapeHTML(cuenta)}</td>
         <td class="py-3 px-6">
           <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${estadoClase}">
             <i class="fa-solid fa-circle text-[8px] mr-1 ${esActivo ? 'text-emerald-500' : 'text-slate-400'}"></i>
@@ -184,6 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formEmpleado.reset();
     document.getElementById("emp-fecha").value = new Date().toISOString().split("T")[0];
     document.getElementById("emp-estado").value = "Activo";
+    poblarCuentas();
     modalEmpleado.classList.remove("hidden");
   });
 
@@ -198,8 +240,12 @@ document.addEventListener("DOMContentLoaded", () => {
       fecha_contratacion: document.getElementById("emp-fecha").value,
       estado: document.getElementById("emp-estado").value,
       id_departamento: document.getElementById("emp-departamento").value || null,
-      id_rol: document.getElementById("emp-rol").value || null
+      id_cargo: document.getElementById("emp-cargo").value || null
     };
+
+    const cuentaSelect = document.getElementById("emp-usuario");
+    // Si falló la carga de usuarios, NO desvincular accidentalmente una cuenta.
+    if (!cuentaSelect.disabled) payload.id_usuario = cuentaSelect.value || null;
 
     const method = empleadoEditandoId ? "PUT" : "POST";
     const url = empleadoEditandoId 
@@ -248,21 +294,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const deptoId = departamentosGlobales.find(d => d.nombre === emp.departamentos?.nombre)?.id_departamento;
       document.getElementById("emp-departamento").value = deptoId || "";
       
-      const rolId = rolesGlobales.find(r => r.nombre_rol === emp.roles?.nombre_rol)?.id_rol;
-      document.getElementById("emp-rol").value = rolId || "";
-      
+      document.getElementById("emp-cargo").value = emp.id_cargo || "";
+      poblarCuentas(id);
       modalEmpleado.classList.remove("hidden");
     } else if (action === "toggle-estado") {
       const nuevoEstado = emp.estado === "Activo" ? "Inactivo" : "Activo";
       if (confirm(`¿Estás seguro de marcar a ${SecurityUtils.escapeHTML(emp.nombre)} como ${nuevoEstado}?`)) {
         try {
-          const payload = { ...emp, estado: nuevoEstado };
-          // We need to map nested objects back to IDs for the PUT request
-          payload.id_departamento = departamentosGlobales.find(d => d.nombre === emp.departamentos?.nombre)?.id_departamento || null;
-          payload.id_rol = rolesGlobales.find(r => r.nombre_rol === emp.roles?.nombre_rol)?.id_rol || null;
-          delete payload.departamentos;
-          delete payload.roles;
-
+          const payload = { estado: nuevoEstado };
           const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/empleados/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -301,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Filtros
-  const filtros = ["buscador-empleados", "filtro-depto-empleado", "filtro-rol-empleado", "filtro-estado-empleado"];
+  const filtros = ["buscador-empleados", "filtro-depto-empleado", "filtro-cargo-empleado", "filtro-estado-empleado"];
   filtros.forEach(id => {
     document.getElementById(id)?.addEventListener("input", aplicarFiltros);
     document.getElementById(id)?.addEventListener("change", aplicarFiltros);
@@ -310,25 +349,123 @@ document.addEventListener("DOMContentLoaded", () => {
   function aplicarFiltros() {
     const term = (document.getElementById("buscador-empleados")?.value || "").toLowerCase();
     const deptoId = document.getElementById("filtro-depto-empleado")?.value;
-    const rolId = document.getElementById("filtro-rol-empleado")?.value;
+    const cargoId = document.getElementById("filtro-cargo-empleado")?.value;
     const estado = document.getElementById("filtro-estado-empleado")?.value;
 
     // We need to resolve names for filtering if we filter by IDs
     const deptoNombre = deptoId ? departamentosGlobales.find(d => String(d.id_departamento) === String(deptoId))?.nombre : null;
-    const rolNombre = rolId ? rolesGlobales.find(r => String(r.id_rol) === String(rolId))?.nombre_rol : null;
+    const cargoNombre = cargoId ? cargosGlobales.find(c => String(c.id_cargo) === String(cargoId))?.nombre : null;
 
     let filtrados = empleadosGlobales.filter(emp => {
       const matchTerm = emp.nombre.toLowerCase().includes(term) || 
                         emp.correo.toLowerCase().includes(term);
       const matchDepto = deptoNombre ? (emp.departamentos?.nombre === deptoNombre) : true;
-      const matchRol = rolNombre ? (emp.roles?.nombre_rol === rolNombre) : true;
+      const matchCargo = cargoNombre ? (emp.cargos?.nombre === cargoNombre) : true;
       const matchEstado = estado ? emp.estado === estado : true;
       
-      return matchTerm && matchDepto && matchRol && matchEstado;
+      return matchTerm && matchDepto && matchCargo && matchEstado;
     });
     renderizarTabla(filtrados);
   }
 
-  // Inicialización paralela
-  Promise.all([cargarDepartamentos(), cargarRoles()]).then(cargarEmpleados);
+  // Administración del catálogo de cargos laborales (sin permisos de sistema).
+  const modalCargos = document.getElementById("modal-cargos");
+  const formCargo = document.getElementById("form-cargo");
+  const inputCargo = document.getElementById("cargo-nombre");
+  const btnGuardarCargo = document.getElementById("btn-guardar-cargo");
+
+  function renderizarCargos() {
+    const destino = document.getElementById("lista-cargos");
+    if (!destino) return;
+    if (!cargosGlobales.length) {
+      destino.innerHTML = '<p class="text-xs text-slate-500 py-3">No hay cargos. Registra el primero para asignarlo a empleados.</p>';
+      return;
+    }
+    destino.innerHTML = cargosGlobales.map(c => `
+      <div class="flex items-center justify-between gap-3 py-3 border-b border-slate-100">
+        <span class="text-xs font-semibold text-slate-700">${SecurityUtils.escapeHTML(c.nombre)}</span>
+        <div class="shrink-0 flex gap-2">
+          <button type="button" data-action="editar-cargo" data-id="${c.id_cargo}" class="px-2 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100">Editar</button>
+          <button type="button" data-action="eliminar-cargo" data-id="${c.id_cargo}" class="px-2 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100">Eliminar</button>
+        </div>
+      </div>`).join("");
+  }
+
+  function resetCargo() {
+    cargoEditandoId = null;
+    formCargo?.reset();
+    if (btnGuardarCargo) btnGuardarCargo.textContent = "Agregar cargo";
+  }
+
+  document.getElementById("btn-administrar-cargos")?.addEventListener("click", () => {
+    resetCargo();
+    renderizarCargos();
+    modalCargos?.classList.remove("hidden");
+  });
+  document.getElementById("btn-cerrar-cargos")?.addEventListener("click", () => {
+    modalCargos?.classList.add("hidden");
+    resetCargo();
+  });
+  document.getElementById("btn-cancelar-cargo")?.addEventListener("click", resetCargo);
+
+  formCargo?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const nombre = inputCargo.value.trim();
+    if (nombre.length < 2) {
+      NotificationService.warning("Nombre de cargo inválido", "Ingresa al menos dos caracteres.");
+      return;
+    }
+    const method = cargoEditandoId ? "PUT" : "POST";
+    const ruta = cargoEditandoId ? `${CONFIG.API_URL}/admin/cargos/${cargoEditandoId}` : `${CONFIG.API_URL}/admin/cargos`;
+    if (btnGuardarCargo) btnGuardarCargo.disabled = true;
+    try {
+      const { res, data } = await fetchJson(ruta, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nombre })
+      });
+      if (!res.ok || !data.exito) return NotificationService.apiError(res, data, "No se pudo guardar el cargo.");
+      NotificationService.success(cargoEditandoId ? "Cargo actualizado" : "Cargo agregado", "El catálogo se actualizó correctamente.");
+      resetCargo();
+      await cargarCargos();
+      await cargarEmpleados();
+    } catch (error) {
+      console.error("Error al guardar cargo", error);
+      NotificationService.error("No se pudo guardar el cargo", "Intenta nuevamente.");
+    } finally {
+      if (btnGuardarCargo) btnGuardarCargo.disabled = false;
+    }
+  });
+
+  document.getElementById("lista-cargos")?.addEventListener("click", async event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+    const cargo = cargosGlobales.find(c => String(c.id_cargo) === String(button.dataset.id));
+    if (!cargo) return;
+    if (button.dataset.action === "editar-cargo") {
+      cargoEditandoId = cargo.id_cargo;
+      inputCargo.value = cargo.nombre;
+      if (btnGuardarCargo) btnGuardarCargo.textContent = "Guardar cambios";
+      inputCargo.focus();
+      return;
+    }
+    if (button.dataset.action === "eliminar-cargo") {
+      if (!confirm(`¿Eliminar el cargo «${cargo.nombre}»? Solo se permite si no está asignado a empleados.`)) return;
+      try {
+        const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/cargos/${cargo.id_cargo}`, {
+          method: "DELETE", headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok || !data.exito) return NotificationService.apiError(res, data, "No se pudo eliminar el cargo.");
+        NotificationService.success("Cargo eliminado", "El cargo se eliminó del catálogo.");
+        await cargarCargos();
+        aplicarFiltros();
+      } catch (error) {
+        console.error("Error al eliminar cargo", error);
+        NotificationService.error("No se pudo eliminar el cargo", "Intenta nuevamente.");
+      }
+    }
+  });
+
+  // Un fallo al cargar usuarios nunca debe impedir ver el listado de empleados.
+  Promise.all([cargarDepartamentos(), cargarCargos(), cargarCuentas()]).then(cargarEmpleados);
 });

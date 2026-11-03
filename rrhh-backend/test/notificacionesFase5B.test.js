@@ -69,8 +69,8 @@ test('Fase 5B: incluye verificación de triggers, RLS e idempotencia y rollback 
 
 test('Fase 5B: la bandeja informa que no salen correos reales', () => {
   const html = fs.readFileSync(path.join(raiz,'rrhh-frontend/notificaciones.html'), 'utf8');
-  assert.match(html, /Fase 5B · Registro automático/);
-  assert.match(html, /Aún no se envían correos a candidatos/);
+  assert.match(html, /Fase 5C · Procesamiento simulado/);
+  assert.match(html, /sin enviar correos a candidatos/);
   const frontend = fs.readFileSync(path.join(raiz,'rrhh-frontend/js/notificaciones.js'), 'utf8');
   assert.match(frontend, /Los eventos nuevos aparecerán/);
 });

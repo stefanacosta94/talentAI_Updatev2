@@ -50,10 +50,11 @@ test('SQL activa RLS, impide acceso anónimo y tiene idempotencia', () => {
   assert.match(sql, /clave_idempotencia varchar\(180\) NOT NULL UNIQUE/);
   assert.doesNotMatch(sql, /CREATE TRIGGER/i);
 });
-test('rutas de notificaciones protegidas', () => {
+test('rutas de notificaciones protegidas, incluidas las mutaciones de Fase 5C', () => {
   const rutas = fs.readFileSync(path.resolve(__dirname,'../src/routes/notificaciones.routes.js'), 'utf8');
   assert.match(rutas, /router\.use\(verificarToken, adminOnly\)/);
-  assert.doesNotMatch(rutas, /router\.post\(/);
+  assert.match(rutas, /router\.post\('\/procesar-simulacion'/);
+  assert.match(rutas, /router\.post\('\/conciliar-recepciones'/);
 });
 test('pantalla administrativa existe y está enlazada', () => {
   assert.ok(fs.existsSync(path.join(raizFrontend, 'notificaciones.html')));

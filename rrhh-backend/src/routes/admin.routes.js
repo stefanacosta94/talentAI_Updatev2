@@ -418,6 +418,51 @@ router.get('/documentos', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+// Edición de título y, opcionalmente, reemplazo seguro de PDF en Storage privado.
+router.put('/documentos/:id', upload.single('archivo_documento'), async (req, res, next) => {
+  let nuevaRuta = null;
+  try {
+    const id = Number(req.params.id);
+    const titulo = String(req.body.titulo || '').trim();
+    if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ exito: false, error: 'ID de documento inválido.' });
+    if (!titulo || titulo.length > 180) return res.status(400).json({ exito: false, error: 'El título debe tener entre 1 y 180 caracteres.' });
+    const { data: anterior, error: findError } = await supabase.from('base_conocimiento')
+      .select('id_documento, url_archivo').eq('id_documento', id).maybeSingle();
+    if (findError) throw createSupabaseError(findError, 'No fue posible localizar el documento');
+    if (!anterior) return res.status(404).json({ exito: false, error: 'Documento no encontrado.' });
+
+    const cambios = { titulo };
+    if (req.file) {
+      const validacion = validatePdfFile(req.file);
+      if (!validacion.ok) return res.status(400).json({ exito: false, error: validacion.error });
+      cambios.contenido_texto = await atsService.extraerTextoPDF(req.file.buffer);
+      const nombre = `doc_${Date.now()}_${safeFileComponent(req.file.originalname, 'documento.pdf')}`;
+      nuevaRuta = await uploadPrivatePdf('documentos_empresa', nombre, req.file.buffer);
+      cambios.url_archivo = nuevaRuta;
+    }
+
+    const { data, error } = await supabase.from('base_conocimiento')
+      .update(cambios).eq('id_documento', id).select('id_documento, titulo').maybeSingle();
+    if (error) throw createSupabaseError(error, 'No fue posible actualizar el documento');
+    if (!data) {
+      if (nuevaRuta) await removeStoredObject('documentos_empresa', nuevaRuta).catch(() => {});
+      return res.status(404).json({ exito: false, error: 'Documento no encontrado.' });
+    }
+    // Compensación: el archivo antiguo se retira solo después de persistir la nueva referencia.
+    // Si falla la limpieza, la BD sigue consistente y un proceso posterior puede depurar el huérfano.
+    if (nuevaRuta && anterior.url_archivo && anterior.url_archivo !== nuevaRuta) {
+      try { await removeStoredObject('documentos_empresa', anterior.url_archivo); }
+      catch (storageError) { console.warn('No fue posible limpiar el PDF anterior:', storageError?.message); }
+    }
+    nuevaRuta = null;
+    await registrarAuditoria(req.usuario.id, 'Actualización de Documento', 'Base de Conocimiento', `Documento ${id} actualizado`);
+    res.json({ exito: true, documento: data });
+  } catch (error) {
+    if (nuevaRuta) await removeStoredObject('documentos_empresa', nuevaRuta).catch(() => {});
+    next(error);
+  }
+});
+
 router.get('/documentos/:id/url', async (req, res, next) => {
   try {
     const { id } = req.params;

@@ -1,214 +1,206 @@
-// ==========================================
-// js/careers.js
-// Lógica de la Pantalla Pública de Empleos
-// ==========================================
-
+// Portal público TalentAI: vacantes y postulación real mediante /api/public.
+// No requiere autenticación del visitante.
 document.addEventListener("DOMContentLoaded", () => {
-  // Referencias del DOM principal
-  const contenedorVacantes = document.getElementById("contenedor-vacantes");
-  const contadorVacantes = document.getElementById("contador-vacantes");
+  "use strict";
 
-  // Referencias del Modal
-  const modalAplicacion = document.getElementById("modal-aplicacion");
-  const btnCerrarModal = document.getElementById("btn-cerrar-modal");
-  const formAplicacion = document.getElementById("form-aplicacion");
-  const tituloVacanteModal = document.getElementById("titulo-vacante-modal");
-  const idVacanteInput = document.getElementById("c-id-vacante");
-  const inputArchivo = document.getElementById("c-archivo-cv");
-  const labelNombreArchivo = document.getElementById("nombre-archivo");
-  const btnEnviarAplicacion = document.getElementById("btn-enviar-aplicacion");
-
-  // Referencias del Modal de Éxito
+  const contenedor = document.getElementById("contenedor-vacantes");
+  const contador = document.getElementById("contador-vacantes");
+  const buscar = document.getElementById("buscar-vacante");
+  const filtrar = document.getElementById("filtro-departamento");
+  const modal = document.getElementById("modal-aplicacion");
   const modalExito = document.getElementById("modal-exito");
-  const btnCerrarExito = document.getElementById("btn-cerrar-exito");
+  const form = document.getElementById("form-aplicacion");
+  const btnEnviar = document.getElementById("btn-enviar-aplicacion");
+  const inputPDF = document.getElementById("c-archivo-cv");
+  const nombrePDF = document.getElementById("nombre-archivo");
+  const tituloModal = document.getElementById("titulo-vacante-modal");
+  const idModal = document.getElementById("c-id-vacante");
+  let vacantesActivas = [];
+  let enviando = false;
+  let botonDeOrigen = null;
 
-  // 1. Mostrar nombre del archivo seleccionado
-  inputArchivo.addEventListener("change", (e) => {
-    if (e.target.files.length > 0) {
-      labelNombreArchivo.innerHTML = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-file-pdf mr-1"></i> ${e.target.files[0].name}</span>`;
+  const notificar = (tipo, titulo, mensaje, duracion) => {
+    if (typeof NotificationService !== "undefined") {
+      NotificationService[tipo]?.(titulo, mensaje, duracion);
     } else {
-      labelNombreArchivo.innerText = "Formato PDF. Máx 5MB.";
+      console.warn(`${titulo}: ${mensaje}`);
+    }
+  };
+  const departamentoDe = (v) => {
+    if (typeof v.departamentos === "string") return v.departamentos;
+    return v.departamentos?.nombre || v.departamento || "Sin departamento";
+  };
+  const normalizar = (valor) => String(valor ?? "").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const elemento = (etiqueta, clase, contenido) => {
+    const el = document.createElement(etiqueta);
+    if (clase) el.className = clase;
+    if (contenido != null) el.textContent = String(contenido);
+    return el;
+  };
+
+  const mostrarModal = (ventana) => {
+    ventana.classList.remove("hidden");
+    const panel = ventana.querySelector(".transform");
+    requestAnimationFrame(() => panel?.classList.replace("scale-95", "scale-100"));
+    ventana.querySelector('[role="dialog"]')?.focus();
+    document.body.style.overflow = "hidden";
+  };
+  const ocultarModal = (ventana) => {
+    const panel = ventana.querySelector(".transform");
+    panel?.classList.replace("scale-100", "scale-95");
+    ventana.classList.add("hidden");
+    document.body.style.overflow = "";
+    if (botonDeOrigen?.isConnected) botonDeOrigen.focus();
+  };
+  const abrirAplicacion = (vacante, button) => {
+    botonDeOrigen = button;
+    idModal.value = vacante.id_vacante;
+    tituloModal.textContent = vacante.titulo || "Vacante";
+    mostrarModal(modal);
+  };
+  const cerrarAplicacion = () => {
+    if (enviando) return;
+    ocultarModal(modal);
+    form.reset();
+    nombrePDF.textContent = "Formato PDF. Máx. 5 MB.";
+  };
+  const cerrarExito = () => ocultarModal(modalExito);
+
+  document.getElementById("btn-cerrar-modal")?.addEventListener("click", cerrarAplicacion);
+  document.getElementById("btn-cerrar-exito")?.addEventListener("click", cerrarExito);
+  [modal, modalExito].forEach(ventana => ventana?.addEventListener("click", (event) => {
+    if (event.target === ventana) {
+      if (ventana === modal) cerrarAplicacion();
+      else cerrarExito();
+    }
+  }));
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!modalExito.classList.contains("hidden")) cerrarExito();
+    else if (!modal.classList.contains("hidden")) cerrarAplicacion();
+  });
+
+  inputPDF.addEventListener("change", () => {
+    const archivo = inputPDF.files?.[0];
+    nombrePDF.textContent = archivo ? archivo.name : "Formato PDF. Máx. 5 MB.";
+    if (archivo && (archivo.size > 5 * 1024 * 1024 || !archivo.name.toLowerCase().endsWith(".pdf"))) {
+      inputPDF.value = "";
+      nombrePDF.textContent = "Formato PDF. Máx. 5 MB.";
+      notificar("warning", "Archivo no válido", "Selecciona un PDF de hasta 5 MB.");
     }
   });
 
-  // 2. Controladores del Modal
-  const abrirModal = (idVacante, tituloVacante) => {
-    idVacanteInput.value = idVacante;
-    tituloVacanteModal.innerText = tituloVacante;
-    modalAplicacion.classList.remove("hidden");
-    setTimeout(() => {
-      modalAplicacion.querySelector(".transform").classList.remove("scale-95");
-      modalAplicacion.querySelector(".transform").classList.add("scale-100");
-    }, 10);
+  const estadoVacio = (mensaje, icono = "fa-briefcase", permitirReintento = false) => {
+    contenedor.replaceChildren();
+    const caja = elemento("div", "vacancy-placeholder");
+    const icon = elemento("i", `fa-solid ${icono}`);
+    icon.setAttribute("aria-hidden", "true");
+    caja.append(icon, elemento("span", "", mensaje));
+    if (permitirReintento) {
+      const btn = elemento("button", "vacancy-retry", "Volver a intentar");
+      btn.type = "button";
+      btn.addEventListener("click", cargarVacantesPublicas);
+      caja.appendChild(btn);
+    }
+    contenedor.appendChild(caja);
+  };
+  const crearTarjeta = (vacante) => {
+    const card = elemento("article", "vacancy-card");
+    const top = elemento("div", "vacancy-card-top");
+    const depto = elemento("span", "vacancy-department", departamentoDe(vacante));
+    const icon = elemento("i", "fa-solid fa-arrow-up-right-dots vacancy-card-icon");
+    icon.setAttribute("aria-hidden", "true");
+    top.append(depto, icon);
+    const organization = elemento("div", "vacancy-employer-unknown", "Empresa publicadora: perfil pendiente de configurar");
+    const titulo = elemento("h3", "", vacante.titulo || "Vacante");
+    const descripcion = elemento("p", "", vacante.descripcion_puesto || "Consulta los detalles de esta oportunidad.");
+    const requisitos = elemento("div", "vacancy-req");
+    const check = elemento("i", "fa-solid fa-circle-check");
+    check.setAttribute("aria-hidden", "true");
+    requisitos.append(check, document.createTextNode(vacante.requisitos || "Ver detalles de la vacante"));
+    const boton = elemento("button", "vacancy-apply", "Postularme a esta vacante");
+    boton.type = "button";
+    boton.addEventListener("click", () => abrirAplicacion(vacante, boton));
+    card.append(top, organization, titulo, descripcion, requisitos, boton);
+    return card;
+  };
+  const renderizar = () => {
+    const termino = normalizar(buscar?.value).trim();
+    const departamento = filtrar?.value || "";
+    const filtradas = vacantesActivas.filter(v => {
+      if (departamento && departamentoDe(v) !== departamento) return false;
+      return !termino || normalizar([v.titulo, v.descripcion_puesto, v.requisitos, departamentoDe(v)].join(" ")).includes(termino);
+    });
+    if (!filtradas.length) {
+      estadoVacio(vacantesActivas.length ? "No encontramos vacantes con esos filtros." : "No hay posiciones abiertas en este momento.", "fa-magnifying-glass");
+      return;
+    }
+    contenedor.replaceChildren(...filtradas.map(crearTarjeta));
   };
 
-  const cerrarModal = () => {
-    modalAplicacion.querySelector(".transform").classList.remove("scale-100");
-    modalAplicacion.querySelector(".transform").classList.add("scale-95");
-    setTimeout(() => {
-      modalAplicacion.classList.add("hidden");
-      formAplicacion.reset();
-      labelNombreArchivo.innerText = "Formato PDF. Máx 5MB.";
-    }, 200);
-  };
-
-  btnCerrarModal.addEventListener("click", cerrarModal);
-
-  const abrirModalExito = () => {
-    modalExito.classList.remove("hidden");
-    setTimeout(() => {
-      modalExito.querySelector(".transform").classList.remove("scale-95");
-      modalExito.querySelector(".transform").classList.add("scale-100");
-    }, 10);
-  };
-
-  btnCerrarExito.addEventListener("click", () => {
-    modalExito.querySelector(".transform").classList.remove("scale-100");
-    modalExito.querySelector(".transform").classList.add("scale-95");
-    setTimeout(() => {
-      modalExito.classList.add("hidden");
-    }, 200);
-  });
-
-  // 3. Cargar Vacantes Públicas
   async function cargarVacantesPublicas() {
+    estadoVacio("Consultando las vacantes disponibles...", "fa-spinner");
     try {
-      // Nota: Esta ruta en el backend debe ser creada sin el middleware 'verificarToken'
-      const respuesta = await fetch(`${CONFIG.API_URL}/public/vacantes`);
-      const data = await respuesta.json();
-
-      if (!respuesta.ok || !data.exito) throw new Error(data.error);
-
-      // Filtrar solo las vacantes 'Abierta' o 'Activa'
-      const vacantesActivas = data.vacantes.filter(
-        (v) => v.estado === "Abierta" || v.estado === "Activa",
-      );
-
-      contadorVacantes.innerText = `${vacantesActivas.length} Plazas`;
-      contenedorVacantes.innerHTML = "";
-
-      if (vacantesActivas.length === 0) {
-        contenedorVacantes.innerHTML = `
-                    <div class="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                        <i class="fa-solid fa-briefcase text-slate-200 text-5xl mb-4"></i>
-                        <p class="text-slate-500 font-semibold">No hay posiciones abiertas en este momento.</p>
-                    </div>
-                `;
-        return;
-      }
-
-      vacantesActivas.forEach((vacante, index) => {
-        const card = document.createElement("div");
-        card.className =
-          "bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col fade-in";
-        card.style.animationDelay = `${index * 0.1}s`;
-
-        card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-[10px] font-black text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 uppercase tracking-widest">
-                            ${vacante.departamento || "General"}
-                        </span>
-                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                            <i class="fa-solid fa-fire text-orange-500 text-[10px]"></i>
-                        </div>
-                    </div>
-                    
-                    <h4 class="text-2xl font-extrabold text-blue-950 mb-3 leading-tight">${vacante.titulo}</h4>
-                    <p class="text-slate-500 text-sm mb-6 flex-grow line-clamp-3 font-medium leading-relaxed">${vacante.descripcion_puesto}</p>
-                    
-                    <div class="pt-5 border-t border-slate-100 mb-6">
-                        <p class="text-xs text-slate-600 font-bold line-clamp-2"><i class="fa-solid fa-check text-emerald-500 mr-1"></i> ${vacante.requisitos}</p>
-                    </div>
-                    
-                    <button type="button" class="btn-aplicar mt-auto w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-600/20" data-id="${vacante.id_vacante}" data-titulo="${vacante.titulo}">
-                        Aplicar a esta plaza
-                    </button>
-                `;
-        contenedorVacantes.appendChild(card);
-      });
-
-      // Asignar eventos a los nuevos botones
-      document.querySelectorAll(".btn-aplicar").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = e.currentTarget.getAttribute("data-id");
-          const titulo = e.currentTarget.getAttribute("data-titulo");
-          abrirModal(id, titulo);
-        });
-      });
-    } catch (err) {
-      console.error(err);
-      contenedorVacantes.innerHTML = `<p class="text-red-500 font-black text-center col-span-full uppercase text-xs tracking-widest">Ocurrió un error al cargar las posiciones.</p>`;
+      const vacantes = await PublicVacanciesAPI.cargarVacantes();
+      vacantesActivas = vacantes.filter(v => v.estado === "Abierta" || v.estado === "Activa");
+      contador.textContent = `${vacantesActivas.length} ${vacantesActivas.length === 1 ? "vacante" : "vacantes"}`;
+      const deptos = [...new Set(vacantesActivas.map(departamentoDe))].sort((a, b) => a.localeCompare(b, "es"));
+      filtrar.replaceChildren(new Option("Todos los departamentos", ""), ...deptos.map(d => new Option(d, d)));
+      renderizar();
+    } catch (error) {
+      console.error("Error al consultar vacantes:", { api: PublicVacanciesAPI.apiBaseURL(), error });
+      contador.textContent = "Temporalmente no disponibles";
+      estadoVacio(PublicVacanciesAPI.friendlyMessage(error), "fa-circle-exclamation", true);
     }
   }
+  buscar?.addEventListener("input", renderizar);
+  filtrar?.addEventListener("change", renderizar);
 
-  // 4. Lógica de Envío del Formulario (Conexión Real con FormData)
-  formAplicacion.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const originalBtnText = btnEnviarAplicacion.innerHTML;
-    btnEnviarAplicacion.innerHTML =
-      '<i class="fa-solid fa-circle-notch fa-spin"></i> Analizando perfil con IA...';
-    btnEnviarAplicacion.disabled = true;
-
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (enviando || !form.reportValidity()) return;
+    const archivo = inputPDF.files?.[0];
+    if (!archivo || archivo.size > 5 * 1024 * 1024 || !archivo.name.toLowerCase().endsWith(".pdf")) {
+      notificar("warning", "Revisa tu currículum", "Adjunta un archivo PDF válido de hasta 5 MB.");
+      return;
+    }
+    enviando = true;
+    const botonOriginal = btnEnviar.innerHTML;
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = "Enviando postulación...";
     try {
-      // FormData es necesario para enviar archivos físicos
-      const formData = new FormData();
-      formData.append(
-        "id_vacante",
-        document.getElementById("c-id-vacante").value,
-      );
-      formData.append("nombre", document.getElementById("c-nombre").value);
-      formData.append("correo", document.getElementById("c-correo").value);
-      formData.append("telefono", document.getElementById("c-telefono").value);
-      formData.append("linkedin", document.getElementById("c-linkedin").value);
-
-      // Adjuntamos el archivo PDF
-      const archivoInput = document.getElementById("c-archivo-cv");
-      formData.append("archivo_cv", archivoInput.files[0]);
-
-      // Petición al Backend
-      const respuesta = await fetch(`${CONFIG.API_URL}/public/aplicar`, {
-        method: "POST",
-        body: formData, // Nota: Cuando usas FormData, NO se pone el header 'Content-Type'
-      });
-
-      const data = await respuesta.json();
-
-      // ... (código donde procesas el fetch)
-
+      const datos = new FormData();
+      datos.append("id_vacante", idModal.value);
+      datos.append("nombre", document.getElementById("c-nombre").value.trim());
+      datos.append("correo", document.getElementById("c-correo").value.trim());
+      datos.append("telefono", document.getElementById("c-telefono").value.trim());
+      datos.append("linkedin", document.getElementById("c-linkedin").value.trim());
+      datos.append("archivo_cv", archivo);
+      const respuesta = await fetch(`${PublicVacanciesAPI.apiBaseURL()}/public/aplicar`, { method: "POST", body: datos });
+      const data = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok || !data.exito) {
         if (respuesta.status === 409) {
-          NotificationService.warning(
-            "Ya tienes una postulación activa",
-            data.error || "Ya registramos una postulación con este correo para esta vacante. No es necesario volver a enviar tu currículum.",
-            7000,
-          );
+          notificar("warning", "Ya existe una postulación", data.error || "Este correo ya tiene una postulación para esta vacante.", 7000);
+        } else if (typeof NotificationService !== "undefined") {
+          NotificationService.apiError(respuesta, data, "No pudimos procesar tu postulación.");
         } else {
-          NotificationService.apiError(
-            respuesta,
-            data,
-            "No se pudo procesar tu postulación.",
-          );
+          notificar("error", "No pudimos procesar tu postulación", data.error || "Inténtalo nuevamente.");
         }
         return;
       }
-
-      cerrarModal();
-      setTimeout(() => {
-        abrirModalExito();
-      }, 300);
-    } catch (err) {
-      console.error("Error al enviar la postulación:", err);
-      NotificationService.error(
-        "No pudimos enviar tu postulación",
-        "Verifica tu conexión e intenta nuevamente. Si el problema continúa, inténtalo más tarde.",
-      );
+      // Evitar conservar datos en el formulario una vez aceptada la postulación.
+      enviando = false;
+      cerrarAplicacion();
+      mostrarModal(modalExito);
+    } catch (error) {
+      console.error("Error al enviar postulación:", error);
+      notificar("error", "No pudimos enviar tu postulación", "Comprueba tu conexión y vuelve a intentarlo.");
     } finally {
-      btnEnviarAplicacion.innerHTML = originalBtnText;
-      btnEnviarAplicacion.disabled = false;
+      enviando = false;
+      btnEnviar.disabled = false;
+      btnEnviar.innerHTML = botonOriginal;
     }
   });
 
-  // Ejecutar
   cargarVacantesPublicas();
 });

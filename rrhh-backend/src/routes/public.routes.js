@@ -4,6 +4,7 @@ const router = express.Router();
 const supabase = require('../config/supabase');
 const atsService = require('../services/atsService');
 const { uploadPrivatePdf, removeStoredObject } = require('../services/storageService');
+const { withSupabaseRetry, createSupabaseError } = require('../utils/supabaseRetry');
 const {
   normalizeEmail,
   isValidEmail,
@@ -15,11 +16,14 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 
 router.get('/vacantes', async (req, res, next) => {
   try {
-    const { data: vacantes, error } = await supabase
-      .from('vacantes')
-      .select('id_vacante, titulo, descripcion_puesto, requisitos, estado, fecha_creacion, departamentos (nombre)')
-      .eq('estado', 'Activa');
-    if (error) throw new Error(error.message);
+    const { data: vacantes, error } = await withSupabaseRetry(
+      () => supabase
+        .from('vacantes')
+        .select('id_vacante, titulo, descripcion_puesto, requisitos, estado, fecha_creacion, departamentos (nombre)')
+        .eq('estado', 'Activa'),
+      { label: 'Carga pública de vacantes', attempts: 3 },
+    );
+    if (error) throw createSupabaseError(error, 'No fue posible consultar las vacantes');
     res.json({ exito: true, total: vacantes.length, vacantes });
   } catch (error) { next(error); }
 });

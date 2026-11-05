@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let pagina = 1;
   let cantidad = 0;
   const limite = 20;
+  let modoEnvio = 'mock';
+  let resendConfigurado = false;
 
   async function solicitar(ruta, metodo = 'GET', datos = undefined) {
     const respuesta = await fetch(`${CONFIG.API_URL}/admin/notificaciones${ruta}`, {
@@ -85,14 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
         celda(tr, n.destinatario_email);
         celda(tr, ETIQUETAS[n.tipo_evento] || n.tipo_evento);
         const estadoAprobacion = n.datos?.requiere_aprobacion === true && n.datos?.aprobado_envio !== true;
-        celda(tr, (ESTADOS[n.estado] || n.estado) + (estadoAprobacion ? ' · Sin aprobar' : ''));
+        celda(tr, (ESTADOS[n.estado] || n.estado) + (estadoAprobacion ? ' · Sin aprobar' : '') +
+          (n.prueba_resend_autorizada ? ' · Prueba Resend autorizada' : '') +
+          (n.estado === 'aceptado_proveedor' ? ' (NO confirma entrega)' : '') +
+          (n.id_mensaje_proveedor ? ` · ID Resend: ${n.id_mensaje_proveedor}` : ''));
         celda(tr, `${n.intentos ?? 0}/${n.max_intentos ?? 5}`);
         const tdAcciones = document.createElement('td');
         tdAcciones.className = 'p-3';
         const acciones = [];
         if (estadoAprobacion && ['pendiente','fallido'].includes(n.estado)) acciones.push(['aprobar','Aprobar']);
         if (['pendiente','fallido','requiere_revision'].includes(n.estado)) acciones.push(['cancelar','Cancelar']);
-        if (['fallido','requiere_revision'].includes(n.estado) && n.intentos < n.max_intentos) acciones.push(['reprogramar','Reprogramar']);
+        if (['fallido','requiere_revision'].includes(n.estado) && n.intentos < n.max_intentos &&
+          !(n.estado === 'requiere_revision' && n.prueba_resend_autorizada)) acciones.push(['reprogramar','Reprogramar']);
+        if (modoEnvio === 'resend_test' && resendConfigurado &&
+          !n.prueba_resend_autorizada && ['pendiente','fallido'].includes(n.estado) && !estadoAprobacion) {
+          acciones.push(['autorizar-prueba-resend', 'Autorizar prueba Resend']);
+        }
         acciones.push(['intentos','Historial']);
         for (const [accion, titulo] of acciones) {
           const boton = document.createElement('button');
@@ -157,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnProcesar = document.getElementById('btn-procesar-simulacion');
   const btnConciliar = document.getElementById('btn-conciliar-recepciones');
+  const btnResend = document.getElementById('btn-procesar-resend-prueba');
+  const avisoResend = document.getElementById('aviso-resend-prueba');
   const dialog = document.getElementById('dialog-intentos');
   const contenidoIntentos = document.getElementById('contenido-intentos');
 
@@ -179,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const mensajes = {
+      'autorizar-prueba-resend':'¿Autorizas esta notificación para UNA PRUEBA por Resend? El correo SOLO irá al destinatario configurado en el backend; se usarán nombre y vacante ficticios. Nunca irá al email del candidato.',
       aprobar:'¿Confirmas que esta comunicación puede procesarse cuando se habilite el envío real?',
       cancelar:'¿Cancelar esta notificación? No volverá a procesarse automáticamente.',
       reprogramar:'¿Confirmas que revisaste el evento y deseas reprogramarlo? Si hubo un procesamiento incierto, verifica antes el proveedor.',
@@ -209,6 +222,37 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) { NotificationService.error('No fue posible simular', error.message); }
     finally { btnProcesar.disabled = false; }
   });
+  btnResend.addEventListener('click', async () => {
+    if (!window.confirm('Esto realiza UN envío real mediante Resend, exclusivamente al correo de pruebas. No se enviará al candidato ni se enviarán eventos no autorizados. ¿Continuar?')) return;
+    btnResend.disabled = true;
+    try {
+      const r = await solicitar('/procesar-resend-prueba', 'POST', {});
+      NotificationService.info('Prueba Resend',
+        `${r.aceptadas} aceptada(s) por el proveedor, ${r.rechazadas} rechazada(s), ${r.inciertas} incierta(s), ${r.sin_finalizar} sin finalizar. Aceptación no es entrega.`);
+      await cargarListado();
+    } catch (error) { NotificationService.error('No fue posible procesar la prueba', error.message); }
+    finally { btnResend.disabled = false; }
+  });
+
+  async function cargarConfiguracion() {
+    try {
+      const r = await solicitar('/configuracion-envio');
+      modoEnvio = r.modo;
+      resendConfigurado = r.configurado === true;
+      const pruebas = modoEnvio === 'resend_test';
+      btnProcesar.hidden = pruebas;
+      btnResend.hidden = !pruebas || !resendConfigurado;
+      avisoResend.textContent = pruebas
+        ? (resendConfigurado
+          ? 'Resend de prueba activo: habilita una notificación específica y después envía solo una prueba. Destino de pruebas configurado; nunca se utiliza el correo del candidato. La aceptación NO implica entrega.'
+          : 'Resend de prueba configurado parcialmente. Comprueba las variables del backend. No se realizarán envíos.')
+        : 'Modo simulado activo. No se enviarán correos mediante Resend.';
+    } catch (_) {
+      btnResend.hidden = true;
+      avisoResend.textContent = 'No se pudo comprobar la configuración de envío; los envíos Resend permanecen deshabilitados en esta pantalla.';
+    }
+  }
+
   btnConciliar.addEventListener('click', async () => {
     if (!window.confirm('La conciliación solo recuperará recepciones desde el corte de Fase 5B y las dejará pendientes de aprobación. ¿Continuar?')) return;
     btnConciliar.disabled = true;
@@ -225,6 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-recargar-notificaciones').addEventListener('click', cargarListado);
   btnAnterior.addEventListener('click', () => { if (pagina > 1) { pagina--; cargarListado(); } });
   btnSiguiente.addEventListener('click', () => { if (pagina * limite < cantidad) { pagina++; cargarListado(); } });
-  cargarListado();
+  cargarConfiguracion().then(cargarListado);
   cargarPlantillas();
 });

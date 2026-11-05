@@ -7,10 +7,22 @@ const adminOnly = require('../middlewares/adminOnly');
 const { withSupabaseRetry, createSupabaseError } = require('../utils/supabaseRetry');
 const { EVENTOS, renderEmail } = require('../services/mailTemplates');
 const { procesarLote, safeCount } = require('../services/notificationProcessor');
+const { procesarUnaPrueba } = require('../services/resendTestProcessor');
+const { configResendTest } = require('../services/resendTestTransport');
 const { registrarAuditoria } = require('../services/auditService');
 
 // El módulo contiene datos personales; todas las rutas son exclusivas del administrador.
 router.use(verificarToken, adminOnly);
+
+// Resumen seguro, sin exponer API Key ni correo privado de la cuenta.
+router.get('/configuracion-envio', (req, res) => {
+  const modo = String(process.env.EMAIL_MODE || 'mock');
+  let configurado = false;
+  if (modo === 'resend_test') {
+    try { configResendTest(); configurado = true; } catch (_) { configurado = false; }
+  }
+  res.json({ exito: true, modo, configurado, destinatario_real_habilitado: false });
+});
 
 router.get('/plantillas', (req, res) => {
   res.json({ exito: true, modo: 'simulacion', eventos: Object.entries(EVENTOS).map(([codigo, v]) => ({ codigo, etiqueta: v.etiqueta })) });
@@ -44,14 +56,14 @@ router.get('/', async (req, res, next) => {
     const offset = (pagina - 1) * limite;
     const { data, count, error } = await withSupabaseRetry(() => {
       let q = supabase.from('notificaciones_email')
-        .select('id_notificacion, id_aplicacion, tipo_evento, destinatario_email, nombre_candidato, titulo_vacante, estado, intentos, max_intentos, proximo_intento_en, creado_en, enviado_en, datos, aprobado_en', { count: 'exact' })
+        .select('id_notificacion, id_aplicacion, tipo_evento, destinatario_email, nombre_candidato, titulo_vacante, estado, intentos, max_intentos, proximo_intento_en, creado_en, enviado_en, datos, aprobado_en, prueba_resend_autorizada, id_mensaje_proveedor', { count: 'exact' })
         .order('creado_en', { ascending: false })
         .range(offset, offset + limite - 1);
       if (estado) q = q.eq('estado', estado);
       return q;
     }, { label: 'Consulta de notificaciones' });
     if (error) throw createSupabaseError(error, 'No fue posible cargar las notificaciones');
-    res.json({ exito: true, registros: data || [], total: count || 0, pagina, limite, modo: 'simulacion' });
+    res.json({ exito: true, registros: data || [], total: count || 0, pagina, limite, modo: String(process.env.EMAIL_MODE || 'mock') });
   } catch (error) { next(error); }
 });
 
@@ -76,6 +88,13 @@ router.post('/:id/aprobar', (req, res, next) => accion(
   req, res, next, 'talentai_aprobar_notificacion', 'Aprobación de notificación',
   { p_actor: req.usuario.id }
 ));
+// Opt-in individual; incluso una notificación histórica no se envía por sí sola.
+router.post('/:id/autorizar-prueba-resend', (req, res, next) => {
+  try { configResendTest(); } catch (error) { return next(error); }
+  return accion(req, res, next, 'talentai_autorizar_prueba_resend',
+    'Autorización individual de prueba Resend', { p_actor: req.usuario.id });
+});
+
 router.post('/:id/cancelar', (req, res, next) => accion(
   req, res, next, 'talentai_cancelar_notificacion', 'Cancelación de notificación'
 ));
@@ -106,6 +125,18 @@ router.post('/procesar-simulacion', async (req, res, next) => {
       `Reclamadas: ${resumen.reclamadas}; simuladas: ${resumen.simuladas}; fallidas: ${resumen.fallidas}`);
     res.json({ exito: true, modo: 'simulacion', ...resumen,
       mensaje: 'Simulación registrada. Ningún correo fue enviado.' });
+  } catch (error) { next(error); }
+});
+
+// Único punto de envío externo: administrador + configuración + opt-in por fila.
+router.post('/procesar-resend-prueba', async (req, res, next) => {
+  try {
+    configResendTest();
+    const resumen = await procesarUnaPrueba();
+    await registrarAuditoria(req.usuario.id, 'Procesamiento con Resend en prueba', 'Notificaciones',
+      `Reclamadas: ${resumen.reclamadas}; aceptadas: ${resumen.aceptadas}; inciertas: ${resumen.inciertas}; sin finalizar: ${resumen.sin_finalizar}`);
+    return res.json({ exito: true, modo: 'resend_test', ...resumen,
+      mensaje: 'Prueba enviada solamente al destino configurado. Aceptación no equivale a entrega.' });
   } catch (error) { next(error); }
 });
 

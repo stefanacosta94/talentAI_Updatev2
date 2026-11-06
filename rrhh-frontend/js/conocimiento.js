@@ -50,17 +50,37 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (data.exito) {
         totalDocs.innerText = data.total;
+        const estadoAuto = document.getElementById('estado-indexacion-auto');
+        if (estadoAuto) estadoAuto.textContent = data.indexacion_automatica_habilitada
+          ? 'Indexación automática activada' : 'Indexación automática desactivada (revisar .env)';
         documentosCargados = data.documentos || [];
         renderizarDocumentos(documentosCargados);
       }
     } catch (e) {
-      listaDocumentos.innerHTML = `<tr><td colspan="3" class="p-5 text-center text-rose-500">Error al cargar documentos</td></tr>`;
+      listaDocumentos.innerHTML = `<tr><td colspan="4" class="p-5 text-center text-rose-500">Error al cargar documentos</td></tr>`;
     }
+  }
+
+  function estadoIndexacion(indexacion) {
+    const valor = String(indexacion?.estado || 'pendiente');
+    const guardados = Number(indexacion?.fragmentos_guardados) || 0;
+    const total = Number(indexacion?.fragmentos_total) || 0;
+    const fraccion = total > 0 ? ` (${guardados}/${total})` : '';
+    const etiquetas = {
+      completado: ['Indexado', 'bg-emerald-50 text-emerald-700'],
+      procesando: ['Indexando' + fraccion, 'bg-blue-50 text-blue-700'],
+      parcial: ['En progreso' + fraccion, 'bg-blue-50 text-blue-700'],
+      pendiente: ['En cola', 'bg-amber-50 text-amber-700'],
+      error: ['Reintento programado' + fraccion, 'bg-amber-50 text-amber-700'],
+      pausado: ['Requiere revisión' + fraccion, 'bg-rose-50 text-rose-700']
+    };
+    const [texto, clases] = etiquetas[valor] || ['Desconocido', 'bg-slate-50 text-slate-500'];
+    return `<span class="inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${clases}">${SecurityUtils.escapeHTML(texto)}</span>`;
   }
 
   function renderizarDocumentos(docs) {
     if (!docs.length) {
-      listaDocumentos.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-slate-500">No hay documentos registrados.</td></tr>';
+      listaDocumentos.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-500">No hay documentos registrados.</td></tr>';
       return;
     }
     listaDocumentos.innerHTML = docs.map(doc => {
@@ -69,7 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return `<tr class="border-b border-slate-100 hover:bg-slate-50/60">
         <td class="p-4 font-bold text-blue-950"><i class="fa-solid fa-file-pdf mr-2 text-rose-600"></i>${SecurityUtils.escapeHTML(doc.titulo)}</td>
         <td class="p-4 text-slate-500 whitespace-nowrap">${SecurityUtils.escapeHTML(fecha)}</td>
+        <td class="p-4">${estadoIndexacion(doc.indexacion)}</td>
         <td class="p-4 text-right whitespace-nowrap">
+          ${["error", "pausado"].includes(doc.indexacion?.estado) ? `<button data-id="${id}" class="btn-reintentar-indice px-3 py-2 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold" title="Reprogramar indexación">Reintentar índice</button>` : ""}
           ${doc.tiene_archivo ? `<button data-id="${id}" class="btn-ver-doc px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold" title="Ver PDF">Ver PDF</button>` : ""}
           <button data-id="${id}" class="btn-editar-doc px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold" title="Editar título">Editar</button>
           <button data-id="${id}" class="btn-eliminar-doc px-3 py-2 rounded-lg bg-rose-50 text-rose-700 text-xs font-bold" title="Eliminar">Eliminar</button>
@@ -115,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
         formDocumento.reset();
         labelArchivo.innerText = "Haz clic para seleccionar un PDF";
         await cargarDocumentos();
-        NotificationService.success("Documento agregado", "El PDF ya forma parte de la base de conocimiento.");
+        NotificationService.success("Documento agregado", "PDF almacenado. Su indexación semántica se realizará en segundo plano.");
       } else {
         NotificationService.apiError(res, data, "No fue posible subir el documento.");
       }
@@ -129,6 +151,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   listaDocumentos.addEventListener("click", async (e) => {
+    const btnReintentar = e.target.closest('.btn-reintentar-indice');
+    if (btnReintentar) {
+      try {
+        const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/documentos/${btnReintentar.dataset.id}/indexacion/reintentar`, {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok || !data.exito) return NotificationService.apiError(res, data, 'No fue posible reprogramar el índice.');
+        NotificationService.success('Índice reprogramado', 'Se procesará por lotes cuando el trabajador esté activo.');
+        await cargarDocumentos();
+      } catch (_) { NotificationService.error('Error de conexión', 'No fue posible reprogramar el índice.'); }
+      return;
+    }
     const btnVer = e.target.closest(".btn-ver-doc");
     if (btnVer) {
       const id = btnVer.dataset.id;
@@ -218,5 +252,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (_) { NotificationService.error("Sin conexión", "No fue posible guardar los cambios."); }
   });
 
+  document.getElementById('btn-recargar-indices')?.addEventListener('click', cargarDocumentos);
+  // La tabla se refresca mientras la pantalla está visible, sin consultar embeddings.
+  setInterval(() => { if (document.visibilityState === 'visible') cargarDocumentos(); }, 60000);
   cargarDocumentos();
 });

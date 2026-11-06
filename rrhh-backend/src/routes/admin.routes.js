@@ -479,7 +479,7 @@ router.post('/documentos', upload.single('archivo_documento'), async (req, res, 
 
     res.status(201).json({
       exito: true,
-      mensaje: 'Documento procesado y respaldado en la nube.',
+      mensaje: 'Documento guardado; indexación semántica en cola.',
       url_documento: signedUrl,
       documento: documentoGuardado,
     });
@@ -498,9 +498,18 @@ router.get('/documentos', async (req, res, next) => {
 
     if (error) throw createSupabaseError(error, 'No fue posible cargar la base de conocimiento');
 
+    // Solo progreso operativo, jamás fragmentos, embeddings ni texto documental.
+    const { data: estados, error: errorIndices } = await withSupabaseRetry(
+      () => supabase.from('rag_tareas_indexacion')
+        .select('id_documento,estado,fragmentos_total,fragmentos_guardados,ultimo_error_codigo,actualizado_en'),
+      { label: 'Carga de estado de indexación RAG' },
+    );
+    if (errorIndices) throw createSupabaseError(errorIndices, 'No fue posible consultar el progreso RAG');
+    const porDocumento = new Map((estados || []).map(row => [Number(row.id_documento), row]));
     const documentosSeguros = (documentos || []).map((documento) => ({
       ...documento,
       tiene_archivo: Boolean(documento.url_archivo),
+      indexacion: porDocumento.get(Number(documento.id_documento)) || { estado: 'pendiente', fragmentos_guardados: 0, fragmentos_total: 0 },
       // La ruta privada no se expone al navegador. La URL firmada se genera al solicitarla.
       url_archivo: undefined,
     }));
@@ -508,8 +517,26 @@ router.get('/documentos', async (req, res, next) => {
     res.json({
       exito: true,
       total: documentosSeguros.length,
+      indexacion_automatica_habilitada: process.env.RAG_AUTO_INDEX_ENABLED === 'true',
       documentos: documentosSeguros,
     });
+  } catch (error) { next(error); }
+});
+
+
+// Reprogramación controlada: solo administradores, sin duplicar ni borrar embeddings existentes.
+router.post('/documentos/:id/indexacion/reintentar', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return res.status(400).json({ exito: false, error: 'ID de documento inválido.' });
+    }
+    const { data, error } = await supabase.rpc('rag_reintentar_tarea', { p_id_documento: id });
+    if (error) throw createSupabaseError(error, 'No fue posible reprogramar la indexación');
+    if (data !== true) return res.status(409).json({ exito: false,
+      error: 'No se puede reprogramar esta indexación en su estado actual.' });
+    await registrarAuditoria(req.usuario.id, 'Reintento de Indexación RAG', 'Base de Conocimiento', `Documento ${id} reprogramado`);
+    return res.json({ exito: true, mensaje: 'Indexación reprogramada. El trabajador la procesará cuando esté habilitado.' });
   } catch (error) { next(error); }
 });
 

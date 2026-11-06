@@ -11,6 +11,10 @@ const atsRouter = require("./src/routes/ats.routes");
 const ragRouter = require("./src/routes/rag.routes");
 const publicRouter = require("./src/routes/public.routes");
 const notificacionesRouter = require("./src/routes/notificaciones.routes");
+const { iniciarIndexadorAutomatico } = require("./src/services/ragAutoIndexer");
+const {
+  iniciarDespachadorAutomatico,
+} = require("./src/services/resendAutoWorker");
 // --- IMPORTACIONES DE CONFIGURACIÓN ---
 const supabase = require("./src/config/supabase"); // <-- Nueva conexión a Supabase
 const iaService = require("./src/services/iaService");
@@ -93,4 +97,6 @@ app.listen(PORT, () => {
   console.log(
     `✅ Servidor TalentAI v2.0 corriendo en http://localhost:${PORT}`,
   );
+  iniciarIndexadorAutomatico();
+  iniciarDespachadorAutomatico();
 });

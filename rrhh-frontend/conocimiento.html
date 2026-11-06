@@ -232,8 +232,8 @@
                   Subir nuevo documento
                 </h3>
                 <p class="text-xs text-slate-500 mb-4">
-                  Sube un PDF para incorporar su contenido a las consultas. No
-                  constituye entrenamiento del modelo.
+                  Sube un PDF. TalentAI lo almacenará y lo indexará por lotes para
+                  el asistente IA; no constituye entrenamiento del modelo.
                 </p>
 
                 <form id="form-documento" class="space-y-4">
@@ -295,7 +295,7 @@
                     class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20"
                   >
                     <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
-                    Procesar con IA
+                    Guardar e indexar
                   </button>
                 </form>
               </div>
@@ -318,12 +318,13 @@
                       conocimiento
                     </p>
                   </div>
-                  <span
-                    class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full"
-                  >
-                    <i class="fa-solid fa-circle-dot text-[8px] mr-1"></i>
-                    Documentación
-                  </span>
+                  <div class="flex flex-col sm:items-end gap-1">
+                    <span id="estado-indexacion-auto" class="text-[10px] text-slate-500">Consultando el trabajador RAG...</span>
+                  <button id="btn-recargar-indices" type="button"
+                    class="px-2.5 py-1.5 text-[10px] font-black uppercase bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
+                    <i class="fa-solid fa-rotate mr-1"></i> Actualizar índices
+                  </button>
+                  </div>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -334,12 +335,13 @@
                       <tr>
                         <th class="text-left p-4">Documento</th>
                         <th class="text-left p-4">Actualizado</th>
+                        <th class="text-left p-4">Índice semántico</th>
                         <th class="text-right p-4">Acciones</th>
                       </tr>
                     </thead>
                     <tbody id="lista-documentos">
                       <tr>
-                        <td colspan="3" class="p-6 text-center">
+                        <td colspan="4" class="p-6 text-center">
                           Cargando documentos...
                         </td>
                       </tr>
@@ -369,10 +371,10 @@
                   ¿Cómo funciona la base de conocimiento?
                 </h4>
                 <p class="text-xs text-blue-800 leading-relaxed">
-                  Los PDF cargados se procesan para extraer su texto y
-                  proporcionar contexto al asistente de RR. HH. Esto no entrena
-                  el modelo. La recuperación semántica mediante embeddings está
-                  pendiente de implementación. Las respuestas deben verificarse
+                  Los PDF cargados se procesan para extraer su texto, dividirlo en fragmentos
+                  y generar embeddings almacenados en Supabase pgvector. El asistente
+                  recupera únicamente los fragmentos relevantes; este proceso no entrena
+                  ni modifica el modelo Gemini. Las respuestas deben verificarse
                   antes de tomar decisiones.
                 </p>
               </div>

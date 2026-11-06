@@ -53,8 +53,8 @@ test('SQL activa RLS, impide acceso anónimo y tiene idempotencia', () => {
 test('rutas de notificaciones protegidas, incluidas las mutaciones de Fase 5C', () => {
   const rutas = fs.readFileSync(path.resolve(__dirname,'../src/routes/notificaciones.routes.js'), 'utf8');
   assert.match(rutas, /router\.use\(verificarToken, adminOnly\)/);
-  assert.match(rutas, /router\.post\('\/procesar-simulacion'/);
-  assert.match(rutas, /router\.post\('\/conciliar-recepciones'/);
+  assert.match(rutas, /router\.post\(\s*(['"])\/procesar-simulacion\1\s*,/);
+  assert.match(rutas, /router\.post\(\s*(['"])\/conciliar-recepciones\1\s*,/);
 });
 test('pantalla administrativa existe y está enlazada', () => {
   assert.ok(fs.existsSync(path.join(raizFrontend, 'notificaciones.html')));

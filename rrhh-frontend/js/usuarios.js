@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await cargarUsuarios();
         NotificationService.success(esEdicion ? "Usuario actualizado" : "Usuario creado", "El registro se guardó correctamente.");
       } else {
-        NotificationService.apiError(res, data, "No fue posible crear el usuario.");
+        NotificationService.apiError(res, data, esEdicion ? "No fue posible actualizar el usuario." : "No fue posible crear el usuario.");
       }
     } catch (err) {
       console.error("Error guardando usuario:", err);

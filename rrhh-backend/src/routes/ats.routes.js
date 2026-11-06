@@ -3,13 +3,14 @@ const multer = require('multer');
 const router = express.Router();
 const supabase = require('../config/supabase');
 const verificarToken = require('../middlewares/authMiddleware');
+const adminOnly = require('../middlewares/adminOnly');
 const atsService = require('../services/atsService');
 const { uploadPrivatePdf, createSignedUrl, removeStoredObject } = require('../services/storageService');
 const { validatePdfFile, safeFileComponent } = require('../security/securityUtils');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
-router.post('/evaluar', verificarToken, upload.single('archivo_cv'), async (req, res, next) => {
+router.post('/evaluar', verificarToken, adminOnly, upload.single('archivo_cv'), async (req, res, next) => {
   let storagePathCV = null;
 
   try {

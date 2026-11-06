@@ -132,11 +132,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 4. Manejo del Envío del Formulario
+    let consultaEnCurso = false;
     formChat.addEventListener("submit", async (e) => {
         e.preventDefault();
         
         const pregunta = inputPregunta.value.trim();
-        if (!pregunta) return;
+        if (!pregunta || consultaEnCurso) return;
+        consultaEnCurso = true;
 
         // Ocultar sugerencias si es el primer mensaje
         if (contenedorSugerencias) contenedorSugerencias.style.display = 'none';
@@ -165,7 +167,10 @@ document.addEventListener("DOMContentLoaded", () => {
             removerIndicadorEscribiendo();
 
             if (!respuesta.ok || !data.exito) {
-                throw new Error(data.error || "No se pudo obtener una respuesta.");
+                const problema = new Error(data.error || "No se pudo obtener una respuesta.");
+                problema.status = respuesta.status;
+                problema.codigo = data.codigo;
+                throw problema;
             }
 
             // Mostrar respuesta de la IA
@@ -173,8 +178,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
             removerIndicadorEscribiendo();
-            agregarMensajeIA("No fue posible completar la consulta en este momento. Verifica tu conexión e inténtalo nuevamente.");
+            // No ocultar denegaciones de permisos tras un mensaje genérico de conexión.
+            const permisoDenegado = error.status === 401 || error.status === 403;
+            const indisponible = error.status === 503;
+            if (indisponible) {
+                // Conservar la pregunta para reintento manual, sin generar otra petición automáticamente.
+                inputPregunta.value = pregunta;
+                inputPregunta.dispatchEvent(new Event("input"));
+            }
+            agregarMensajeIA(permisoDenegado
+                ? (error.message || "No tienes acceso al asistente interno. Contacta a un administrador.")
+                : indisponible
+                    ? (error.message || "Gemini está temporalmente ocupado. Intenta nuevamente en unos segundos.")
+                    : "No fue posible completar la consulta en este momento. Inténtalo nuevamente.");
         } finally {
+            consultaEnCurso = false;
             // Rehabilitar input
             inputPregunta.focus();
         }

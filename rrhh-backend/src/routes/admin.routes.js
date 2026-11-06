@@ -12,6 +12,7 @@ const { ATS_APPLICATION_STATES } = require('../constants/ats');
 const { withSupabaseRetry, createSupabaseError } = require('../utils/supabaseRetry');
 const { normalizeEmail, isValidEmail, isStrongEnoughPassword, isAllowedRole, validatePdfFile, safeFileComponent } = require('../security/securityUtils');
 const { cleanCargoName, optionalPositiveInteger, employeePayload, employeeWriteError } = require('../services/orgValidation');
+const { validarIdUsuario, limpiarNombreDepartamento, validarEdicionUsuario } = require('../services/adminCatalogValidation');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
@@ -100,6 +101,71 @@ router.get('/departamentos', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+// CRUD de Departamentos: corresponde al contrato ya utilizado por departamentos.js.
+router.post('/departamentos', async (req, res, next) => {
+  try {
+    let nombre;
+    try { nombre = limpiarNombreDepartamento(req.body?.nombre); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    const { data, error } = await supabase.from('departamentos').insert([{ nombre }])
+      .select('id_departamento, nombre').single();
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ exito: false, error: 'Ya existe un departamento con ese nombre.' });
+      throw createSupabaseError(error, 'No fue posible crear el departamento');
+    }
+    await registrarAuditoria(req.usuario.id, 'Creación de Departamento', 'Departamentos', `Departamento creado ID: ${data.id_departamento}`);
+    res.status(201).json({ exito: true, mensaje: 'Departamento creado correctamente.', departamento: data });
+  } catch (error) { next(error); }
+});
+
+router.put('/departamentos/:id', async (req, res, next) => {
+  try {
+    let id, nombre;
+    try {
+      id = optionalPositiveInteger(req.params.id, 'id_departamento');
+      nombre = limpiarNombreDepartamento(req.body?.nombre);
+    } catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    if (!id) return res.status(400).json({ exito: false, error: 'ID de departamento inválido.' });
+    const { data, error } = await supabase.from('departamentos').update({ nombre })
+      .eq('id_departamento', id).select('id_departamento, nombre').maybeSingle();
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ exito: false, error: 'Ya existe un departamento con ese nombre.' });
+      throw createSupabaseError(error, 'No fue posible editar el departamento');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Departamento no encontrado.' });
+    await registrarAuditoria(req.usuario.id, 'Edición de Departamento', 'Departamentos', `Departamento actualizado ID: ${id}`);
+    res.json({ exito: true, mensaje: 'Departamento actualizado correctamente.', departamento: data });
+  } catch (error) { next(error); }
+});
+
+router.delete('/departamentos/:id', async (req, res, next) => {
+  try {
+    let id;
+    try { id = optionalPositiveInteger(req.params.id, 'id_departamento'); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    if (!id) return res.status(400).json({ exito: false, error: 'ID de departamento inválido.' });
+    const usos = await Promise.all([
+      withSupabaseRetry(() => supabase.from('empleados').select('id_empleado', { count: 'exact', head: true }).eq('id_departamento', id), { label: 'Uso del departamento en empleados' }),
+      withSupabaseRetry(() => supabase.from('vacantes').select('id_vacante', { count: 'exact', head: true }).eq('id_departamento', id), { label: 'Uso del departamento en vacantes' }),
+    ]);
+    for (const result of usos) {
+      if (result.error) throw createSupabaseError(result.error, 'No fue posible verificar el uso del departamento');
+    }
+    if (usos.some(result => result.count > 0)) {
+      return res.status(409).json({ exito: false, error: 'No se puede eliminar un departamento asignado a empleados o vacantes.' });
+    }
+    const { data, error } = await supabase.from('departamentos').delete().eq('id_departamento', id)
+      .select('id_departamento').maybeSingle();
+    if (error) {
+      if (error.code === '23503') return res.status(409).json({ exito: false, error: 'No se puede eliminar: el departamento tiene registros relacionados.' });
+      throw createSupabaseError(error, 'No fue posible eliminar el departamento');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Departamento no encontrado.' });
+    await registrarAuditoria(req.usuario.id, 'Eliminación de Departamento', 'Departamentos', `Departamento eliminado ID: ${id}`);
+    res.json({ exito: true, mensaje: 'Departamento eliminado correctamente.' });
+  } catch (error) { next(error); }
+});
+
 // ========== BITÁCORA ==========
 router.get('/bitacora', async (req, res, next) => {
   try {
@@ -151,6 +217,29 @@ router.get('/usuarios', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+// Edición de datos de usuario: el rol no se modifica desde este endpoint.
+router.put('/usuarios/:id', async (req, res, next) => {
+  try {
+    let id, payload;
+    try {
+      id = validarIdUsuario(req.params.id);
+      payload = validarEdicionUsuario(req.body);
+    } catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+
+    const cambios = { ...payload.changes };
+    if (payload.nuevaContrasena) cambios.password_hash = await bcrypt.hash(payload.nuevaContrasena, 12);
+    const { data, error } = await supabase.from('usuarios').update(cambios).eq('id', id)
+      .select('id, nombre, email, rol, created_at').maybeSingle();
+    if (error) {
+      if (error.code === '23505') return res.status(409).json({ exito: false, error: 'El correo electrónico ya está registrado.' });
+      throw createSupabaseError(error, 'No fue posible actualizar el usuario');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Usuario no encontrado.' });
+    await registrarAuditoria(req.usuario.id, 'Actualización de Usuario', 'Usuarios', `Datos de usuario actualizados ID: ${id}`);
+    res.json({ exito: true, mensaje: 'Usuario actualizado correctamente.', usuario: data });
+  } catch (error) { next(error); }
+});
+
 router.put('/usuarios/:id/rol', async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -175,8 +264,14 @@ router.delete('/usuarios/:id', async (req, res, next) => {
     if (String(id) === String(req.usuario.id)) {
       return res.status(400).json({ exito: false, error: 'No puedes eliminar tu propio usuario durante una sesión activa.' });
     }
-    const { error } = await supabase.from('usuarios').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    try { validarIdUsuario(id); }
+    catch (error) { return res.status(400).json({ exito: false, error: error.message }); }
+    const { data, error } = await supabase.from('usuarios').delete().eq('id', id).select('id').maybeSingle();
+    if (error) {
+      if (error.code === '23503') return res.status(409).json({ exito: false, error: 'No se puede eliminar: el usuario tiene registros vinculados.' });
+      throw createSupabaseError(error, 'No fue posible eliminar el usuario');
+    }
+    if (!data) return res.status(404).json({ exito: false, error: 'Usuario no encontrado.' });
     await registrarAuditoria(req.usuario.id, 'Eliminación de Usuario', 'Usuarios', `Se eliminó el usuario ID: ${id}`);
     res.json({ exito: true, mensaje: 'Usuario eliminado correctamente.' });
   } catch (error) { next(error); }

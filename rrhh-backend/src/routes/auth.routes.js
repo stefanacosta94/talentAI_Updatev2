@@ -20,8 +20,12 @@ const loginLimiter = rateLimit({
 });
 
 // POST /api/auth/registrar
-// El registro público NUNCA puede elegir privilegios. Todo usuario nuevo inicia como empleado.
+// Registro público deshabilitado por defecto. Si se activa para una demo, la cuenta
+// queda sin vínculo laboral y no puede consultar el asistente interno.
 router.post('/registrar', async (req, res, next) => {
+  if (process.env.PUBLIC_EMPLOYEE_REGISTRATION_ENABLED !== 'true') {
+    return res.status(403).json({ exito: false, error: 'El registro de cuentas debe realizarlo un administrador.' });
+  }
   try {
     const nombre = String(req.body.nombre || '').trim();
     const email = normalizeEmail(req.body.email);

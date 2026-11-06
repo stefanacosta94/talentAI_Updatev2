@@ -115,10 +115,11 @@ test('RAG: credenciales erróneas no activan fallback', async () => {
 
 test('RAG: ruta conserva autorización 6A y responde indisponibilidad sin excepción global', () => {
   const source = fs.readFileSync(path.join(__dirname, '../src/routes/rag.routes.js'), 'utf8');
-  assert.match(source, /router\.post\('\/chat', verificarToken, chatOnly, async/);
-  assert.match(source, /if \(error\?\.isGeminiServiceError\)/);
-  assert.match(source, /res\.status\(error\.status\)\.json/);
-  assert.match(source, /reintentar: error\.retryable/);
+  // Se comprueba la misma ruta y manejo de errores aunque prettier reformatee el JS.
+  assert.match(source, /router\s*\.\s*post\s*\(\s*(['"])\/chat\1\s*,\s*verificarToken\s*,\s*chatOnly\s*,\s*async\b/);
+  assert.match(source, /if\s*\(\s*error\?\.isGeminiServiceError\s*\)/);
+  assert.match(source, /res\s*\.\s*status\s*\(\s*error\.status\s*\)\s*\.\s*json\s*\(/);
+  assert.match(source, /reintentar\s*:\s*error\.retryable/);
 });
 
 test('RAG: interfaz conserva pregunta ante 503 y evita doble envío simultáneo', () => {

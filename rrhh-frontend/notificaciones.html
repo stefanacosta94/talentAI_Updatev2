@@ -161,7 +161,21 @@
         <article class="nc-kpi nc-kpi-amber"><div class="nc-kpi-icon"><i class="fa-regular fa-hourglass-half" aria-hidden="true"></i></div><div><p>Pendientes</p><strong id="kpi-pendientes">—</strong></div></article>
         <article class="nc-kpi nc-kpi-green"><div class="nc-kpi-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></div><div><p>Aceptados por Resend</p><strong id="kpi-aceptados">—</strong></div></article>
         <article class="nc-kpi nc-kpi-red"><div class="nc-kpi-icon"><i class="fa-solid fa-xmark" aria-hidden="true"></i></div><div><p>Fallidos</p><strong id="kpi-fallidos">—</strong><small id="kpi-revision">— en revisión</small></div></article>
-        <article class="nc-kpi nc-kpi-slate"><div class="nc-kpi-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></div><div><p>Último evento</p><strong id="kpi-ultimo-evento" class="nc-kpi-date">—</strong></div></article>
+        <article class="nc-kpi nc-kpi-green"><div class="nc-kpi-icon"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i></div><div><p>Entregados</p><strong id="kpi-entregados">—</strong></div></article>
+        <article class="nc-kpi nc-kpi-red"><div class="nc-kpi-icon"><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i></div><div><p>Rebotados</p><strong id="kpi-rebotados">—</strong></div></article>
+      </section>
+
+      <section class="nc-policy" aria-labelledby="titulo-politica-ats">
+        <div class="nc-policy-copy">
+          <div class="nc-policy-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i>
+            <h2 id="titulo-politica-ats">Envío automático por evento ATS</h2>
+            <span id="estado-politica-ats" class="nc-mini-pill nc-pill-neutral">Consultando...</span>
+          </div>
+          <p id="descripcion-politica-ats">Cuando se active, las postulaciones nuevas y los cambios a En revisión o Entrevista enviarán una prueba automáticamente. Las decisiones de Contratado y Descartado seguirán requiriendo aprobación. Nunca se enviará al correo del candidato.</p>
+        </div>
+        <button id="btn-politica-ats" class="nc-btn nc-btn-outline" type="button" disabled hidden>
+          <i class="fa-solid fa-power-off" aria-hidden="true"></i> <span id="etiqueta-boton-politica-ats">Activar política</span>
+        </button>
       </section>
 
       <section class="nc-toolbar" aria-label="Filtros y operaciones">
@@ -174,6 +188,7 @@
         <div class="nc-tools">
           <button id="btn-recargar-notificaciones" class="nc-btn nc-btn-primary" type="button"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar</button>
           <button id="btn-conciliar-recepciones" class="nc-btn nc-btn-outline" type="button"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Conciliar recepciones</button>
+          <button id="btn-conciliar-webhooks" class="nc-btn nc-btn-outline" type="button" hidden><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i> Conciliar entregas</button>
           <button id="btn-procesar-simulacion" class="nc-btn nc-btn-outline" type="button" hidden><i class="fa-solid fa-play" aria-hidden="true"></i> Simular pendientes</button>
           <button id="btn-procesar-resend-prueba" class="nc-btn nc-btn-link" type="button" hidden><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> Enviar prueba manual</button>
         </div>
@@ -191,7 +206,7 @@
         <div class="nc-pagination"><span id="paginacion-notificaciones" aria-live="polite">Página 1</span><div><button id="pag-anterior" type="button" class="nc-btn nc-btn-outline">Anterior</button><button id="pag-siguiente" type="button" class="nc-btn nc-btn-outline">Siguiente</button></div></div>
       </section>
 
-      <p class="nc-footnote"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Los eventos se generan automáticamente desde el ATS. <strong>En este entorno, el envío a candidatos reales permanece desactivado</strong>; los correos de prueba requieren autorización individual. La aceptación de Resend no confirma la entrega.</span></p>
+      <p class="nc-footnote"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Los eventos se generan automáticamente desde el ATS. <strong>En este entorno, el envío a candidatos reales permanece desactivado</strong>; la política ATS puede autorizar automáticamente los eventos nuevos. La aceptación de Resend no confirma la entrega; la verificación se registra mediante webhooks.</span></p>
 
       <details id="panel-plantillas" class="nc-templates">
         <summary><i class="fa-regular fa-file-lines" aria-hidden="true"></i><span>Vista previa de plantillas</span><small>Contenido ficticio, sin envío</small><i class="fa-solid fa-chevron-down nc-expand" aria-hidden="true"></i></summary>

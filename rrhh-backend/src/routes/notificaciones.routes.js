@@ -10,6 +10,7 @@ const { procesarLote, safeCount } = require('../services/notificationProcessor')
 const { procesarUnaPrueba } = require('../services/resendTestProcessor');
 const { configResendTest } = require('../services/resendTestTransport');
 const { configResendAuto } = require('../services/resendAutoWorker');
+const { configuracionWebhook } = require('../services/resendWebhookService');
 const { registrarAuditoria } = require('../services/auditService');
 
 // Parámetros admitidos en los filtros de consulta. Nunca se interpolan valores
@@ -43,7 +44,10 @@ router.get('/configuracion-envio', (req, res) => {
     intervaloMs = cfg.intervaloMs;
     maxDiario = cfg.maxDiario;
   } catch (_) { /* modo seguro por defecto */ }
-  res.json({ exito: true, modo, configurado, automatico, intervaloMs, maxDiario, destinatario_real_habilitado: false });
+  let webhooksHabilitados = false;
+  try { configuracionWebhook(); webhooksHabilitados = true; } catch (_) { /* deshabilitado */ }
+  res.json({ exito: true, modo, configurado, automatico, intervaloMs, maxDiario,
+    webhooks_habilitados: webhooksHabilitados, destinatario_real_habilitado: false });
 });
 
 router.get('/plantillas', (req, res) => {
@@ -62,6 +66,57 @@ router.get('/plantillas/:evento', (req, res) => {
   } catch (error) {
     res.status(400).json({ exito: false, error: 'Plantilla de correo no reconocida.' });
   }
+});
+
+// 8A.2: política general para eventos NUEVOS de Careers y transiciones ATS.
+// El administrador habilita una vez la política; las notificaciones posteriores
+// se autorizan por trigger en PostgreSQL, solo para el correo fijo de pruebas.
+router.get('/politica-ats', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase.from('notificaciones_auto_ats_politica')
+      .select('habilitado,habilitado_en,actualizado_en').eq('id', 1).single();
+    if (error || !data) {
+      return res.status(503).json({ exito: false,
+        error: 'No fue posible leer la política. Verifica que SQL 16c esté aplicado.' });
+    }
+    let trabajadorHabilitado = false;
+    try { configResendAuto(); trabajadorHabilitado = true; } catch (_) { /* cerrado por defecto */ }
+    return res.json({ exito: true, habilitado: data.habilitado === true,
+      habilitado_en: data.habilitado_en || null,
+      trabajador_habilitado: trabajadorHabilitado,
+      destino: 'prueba_controlada',
+      eventos_inmediatos: ['postulacion_recibida', 'en_revision', 'entrevista'],
+      eventos_con_aprobacion: ['contratado', 'descartado'],
+    });
+  } catch (error) { next(error); }
+});
+
+router.post('/politica-ats', async (req, res, next) => {
+  try {
+    if (typeof req.body?.habilitado !== 'boolean') {
+      return res.status(400).json({ exito: false, error: 'Valor de habilitación inválido.' });
+    }
+    // Nunca activar una política si no está validado el transporte de pruebas.
+    if (req.body.habilitado === true) {
+      try { configResendAuto(); }
+      catch (_) { return res.status(409).json({ exito: false,
+        error: 'Activa primero RESEND_AUTO_ENABLED y configura Resend para pruebas controladas.' }); }
+    }
+    const { data, error } = await supabase.rpc('talentai_configurar_autodespacho_ats', {
+      p_habilitado: req.body.habilitado, p_actor: req.usuario.id,
+    });
+    if (error) return res.status(503).json({ exito: false,
+      error: 'No fue posible actualizar la política de despacho ATS.' });
+    if (data !== true) return res.status(409).json({ exito: false,
+      error: 'La política no pudo cambiar de estado.' });
+    await registrarAuditoria(req.usuario.id,
+      req.body.habilitado ? 'Activar política automática por evento ATS' : 'Pausar política automática por evento ATS',
+      'Notificaciones', 'Solo correo de pruebas; eventos futuros y aprobación de decisiones terminales');
+    return res.json({ exito: true, habilitado: req.body.habilitado,
+      mensaje: req.body.habilitado
+        ? 'Política habilitada. Solo se armarán eventos nuevos de prueba.'
+        : 'Política pausada. Las notificaciones pendientes propias de esta política se desarmaron.' });
+  } catch (error) { next(error); }
 });
 
 // Resumen global: cuentas exactas calculadas en Supabase, no sobre una sola página.
@@ -88,7 +143,13 @@ router.get('/resumen', async (req, res, next) => {
       { label: 'Último evento de notificaciones' }),
     ]);
     if (ultimo.error) throw createSupabaseError(ultimo.error, 'No fue posible consultar último evento');
-    res.json({ exito: true, ...Object.fromEntries(conteos),
+    const entrega = await Promise.all(['entregado', 'rebotado'].map(async (estado) => {
+      const { count, error } = await supabase.from('notificaciones_email')
+        .select('id_notificacion', { count: 'exact', head: true }).eq('entrega_estado', estado);
+      if (error) throw createSupabaseError(error, 'No fue posible consultar confirmaciones de entrega');
+      return [estado, Number(count || 0)];
+    }));
+    res.json({ exito: true, ...Object.fromEntries(conteos), ...Object.fromEntries(entrega),
       ultimo_evento_en: ultimo.data?.[0]?.creado_en || null });
   } catch (error) { next(error); }
 });
@@ -116,7 +177,7 @@ router.get('/', async (req, res, next) => {
     const offset = (pagina - 1) * limite;
     const { data, count, error } = await withSupabaseRetry(() => {
       let q = supabase.from('notificaciones_email')
-        .select('id_notificacion, id_aplicacion, tipo_evento, destinatario_email, nombre_candidato, titulo_vacante, estado, intentos, max_intentos, proximo_intento_en, creado_en, enviado_en, datos, aprobado_en, prueba_resend_autorizada, auto_resend_autorizado, auto_resend_autorizado_en, id_mensaje_proveedor', { count: 'exact' })
+        .select('id_notificacion, id_aplicacion, tipo_evento, destinatario_email, nombre_candidato, titulo_vacante, estado, intentos, max_intentos, proximo_intento_en, creado_en, enviado_en, entrega_estado, entrega_evento_en, entrega_verificado_en, datos, aprobado_en, prueba_resend_autorizada, auto_resend_autorizado, auto_resend_autorizado_en, id_mensaje_proveedor', { count: 'exact' })
         .order('creado_en', { ascending: false })
         .range(offset, offset + limite - 1);
       if (estado) q = q.eq('estado', estado);
@@ -190,6 +251,29 @@ router.get('/:id/intentos', async (req, res, next) => {
     );
     if (error) throw createSupabaseError(error, 'No fue posible consultar el historial');
     res.json({ exito: true, intentos: data || [] });
+  } catch (error) { next(error); }
+});
+
+// Fase 8B: historial verificado de entrega (sin payload ni PII de Resend).
+router.get('/:id/eventos-entrega', async (req, res, next) => {
+  try {
+    if (!UUID.test(req.params.id || '')) return res.status(400).json({ exito: false, error: 'Identificador inválido.' });
+    const { data, error } = await supabase.from('notificaciones_resend_webhook_eventos')
+      .select('tipo, ocurrido_en, recibido_en, procesado')
+      .eq('id_notificacion', req.params.id).order('ocurrido_en', { ascending: false }).limit(50);
+    if (error) throw createSupabaseError(error, 'No fue posible consultar confirmaciones de entrega');
+    return res.json({ exito: true, eventos: data || [] });
+  } catch (error) { next(error); }
+});
+
+// Reconciliación manual de metadatos ya firmados; nunca reenvía mensajes.
+router.post('/conciliar-webhooks', async (req, res, next) => {
+  try {
+    const { data, error } = await supabase.rpc('talentai_conciliar_webhooks_resend', { p_limite: 50 });
+    if (error) return res.status(503).json({ exito: false, error: 'No fue posible conciliar eventos Resend.' });
+    await registrarAuditoria(req.usuario.id, 'Conciliación de eventos de entrega Resend',
+      'Notificaciones', `Eventos correlacionados: ${Number(data || 0)}`);
+    return res.json({ exito: true, correlacionados: Number(data || 0) });
   } catch (error) { next(error); }
 });
 

@@ -69,6 +69,7 @@ function routerSimulado() {
     if (name === '../services/resendTestProcessor') return { procesarUnaPrueba: () => ({}) };
     if (name === '../services/resendTestTransport') return { configResendTest: () => ({}) };
     if (name === '../services/resendAutoWorker') return { configResendAuto: () => ({}) };
+    if (name === '../services/resendWebhookService') return { configuracionWebhook: () => ({}) };
     if (name === '../services/auditService') return { registrarAuditoria: () => {} };
     throw Error(`Importación inesperada: ${name}`);
   };
@@ -100,7 +101,9 @@ test('UX: resumen global obtiene cantidades reales sin descargar todos los regis
   assert.equal(res.body.fallidos, 1);
   assert.equal(res.body.revision, 0);
   assert.equal(res.body.ultimo_evento_en, '2026-11-06T22:31:00Z');
-  assert.equal(queries.filter(q => q.opciones?.head).length, 6);
+  assert.equal(queries.filter(q => q.opciones?.head).length, 8);
+  assert.equal(res.body.entregado, 0);
+  assert.equal(res.body.rebotado, 0);
 });
 
 test('UX: filtros del listado se aplican en Supabase antes de paginar', async () => {

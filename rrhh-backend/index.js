@@ -11,6 +11,7 @@ const atsRouter = require("./src/routes/ats.routes");
 const ragRouter = require("./src/routes/rag.routes");
 const publicRouter = require("./src/routes/public.routes");
 const notificacionesRouter = require("./src/routes/notificaciones.routes");
+const resendWebhookRouter = require("./src/routes/resendWebhook.routes");
 const { iniciarIndexadorAutomatico } = require("./src/services/ragAutoIndexer");
 const {
   iniciarDespachadorAutomatico,
@@ -39,6 +40,19 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
+);
+// Webhook Resend: el cuerpo CRUDO debe preservarse para validar HMAC Svix.
+// Montar antes de express.json() y con límite estricto de 64 KB.
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  message: { recibido: false },
+});
+app.use(
+  "/api/webhooks/resend",
+  webhookLimiter,
+  express.raw({ type: "application/json", limit: "64kb" }),
+  resendWebhookRouter,
 );
 app.use(express.json({ limit: "1mb" }));
 

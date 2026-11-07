@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnProcesar = $('btn-procesar-simulacion');
   const btnResend = $('btn-procesar-resend-prueba');
   const btnConciliar = $('btn-conciliar-recepciones');
+  const btnConciliarWebhooks = $('btn-conciliar-webhooks');
   const btnActualizar = $('btn-recargar-notificaciones');
   const detalleDialog = $('dialog-detalle');
   const intentosDialog = $('dialog-intentos');
@@ -43,6 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
     aceptado_proveedor: 'Aceptado por Resend', fallido: 'Fallido',
     cancelado: 'Cancelado', requiere_revision: 'Requiere revisión',
   });
+  const ENTREGA = Object.freeze({
+    en_transito: 'En tránsito', demorado: 'Entrega demorada', entregado: 'Entrega confirmada',
+    rebotado: 'Rebotado', reclamo: 'Reclamo de spam', fallo_entrega: 'Fallo de entrega',
+    suprimido: 'Suprimido por Resend',
+  });
+  const TIPOS_ENTREGA = Object.freeze({
+    'email.sent': 'en_transito', 'email.delivered': 'entregado',
+    'email.delivery_delayed': 'demorado', 'email.bounced': 'rebotado',
+    'email.complained': 'reclamo', 'email.failed': 'fallo_entrega',
+    'email.suppressed': 'suprimido',
+  });
   const ICONOS_ESTADO = Object.freeze({
     pendiente: 'fa-hourglass-half', procesando: 'fa-arrows-rotate',
     aceptado_proveedor: 'fa-check', fallido: 'fa-xmark',
@@ -56,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let modoEnvio = 'mock';
   let resendConfigurado = false;
   let resendAutoHabilitado = false;
+  let politicaATS = null;
   let filasActuales = new Map();
   let plantillasCargadas = false;
   let timerBusqueda;
@@ -111,8 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function tipoEnvio(n) {
     // El indicador describe AUTORIZACIÓN, no prueba que el envío haya ocurrido.
-    if (n.auto_resend_autorizado === true) return ['Auto. (prueba)', 'nc-type nc-type-auto', 'fa-bolt'];
+    if (n.auto_resend_autorizado === true) return [n.datos?.auto_ats_version ? 'Por evento (prueba)' : 'Auto. (prueba)', 'nc-type nc-type-auto', 'fa-bolt'];
     if (n.prueba_resend_autorizada === true) return ['Manual (prueba)', 'nc-type', 'fa-paper-plane'];
+    if (n.datos?.auto_ats_version && esSinAprobar(n)) return ['Espera aprobación', 'nc-type', 'fa-lock'];
     return ['Sin autorizar', 'nc-type', 'fa-lock'];
   }
   function accionesDisponibles(n) {
@@ -124,15 +138,16 @@ document.addEventListener('DOMContentLoaded', () => {
         && !(n.estado === 'requiere_revision' && n.prueba_resend_autorizada)) {
       acciones.push(['reprogramar', 'Reprogramar tras revisión']);
     }
-    if (modoEnvio === 'resend_test' && resendConfigurado && !n.prueba_resend_autorizada
+    // Los eventos asociados a una política nunca solicitan opt-ins por fila.
+    if (!n.datos?.auto_ats_version && modoEnvio === 'resend_test' && resendConfigurado && !n.prueba_resend_autorizada
         && ['pendiente', 'fallido'].includes(n.estado) && !sinAprobar) {
       acciones.push(['autorizar-prueba-resend', 'Autorizar prueba Resend']);
     }
-    if (resendAutoHabilitado && n.prueba_resend_autorizada && !n.auto_resend_autorizado
+    if (!n.datos?.auto_ats_version && resendAutoHabilitado && n.prueba_resend_autorizada && !n.auto_resend_autorizado
         && n.estado === 'pendiente' && !sinAprobar) {
       acciones.push(['autorizar-auto-resend', 'Activar automático (prueba)']);
     }
-    if (n.auto_resend_autorizado && ['pendiente', 'fallido'].includes(n.estado)) {
+    if (!n.datos?.auto_ats_version && n.auto_resend_autorizado && ['pendiente', 'fallido'].includes(n.estado)) {
       acciones.push(['revocar-auto-resend', 'Revocar automático']);
     }
     return acciones;
@@ -174,6 +189,13 @@ document.addEventListener('DOMContentLoaded', () => {
     estadoBadge.append(icono(ICONOS_ESTADO[n.estado] || 'fa-circle-info'),
       elemento('span', '', ESTADOS[n.estado] || n.estado || '—'));
     celdaEstado.append(estadoBadge);
+    if (n.estado === 'aceptado_proveedor') {
+      const estadoEntrega = n.entrega_estado ? (ENTREGA[n.entrega_estado] || 'Estado no reconocido') : 'Entrega aún no confirmada';
+      const clase = n.entrega_estado === 'entregado' ? 'nc-delivery-confirmed'
+        : ['rebotado','reclamo','fallo_entrega','suprimido'].includes(n.entrega_estado) ? 'nc-delivery-bounced'
+        : n.entrega_estado === 'demorado' ? 'nc-delivery-delayed' : 'nc-delivery-unknown';
+      celdaEstado.append(elemento('small', `nc-delivery-note ${clase}`, estadoEntrega));
+    }
     if (esSinAprobar(n)) celdaEstado.append(elemento('small', 'nc-row-note', 'Requiere aprobación'));
     tr.append(celdaEstado);
 
@@ -247,13 +269,14 @@ document.addEventListener('DOMContentLoaded', () => {
       texto('total-notificaciones', datos.total);
       texto('kpi-pendientes', datos.pendientes);
       texto('kpi-aceptados', datos.aceptados);
+      texto('kpi-entregados', datos.entregado);
+      texto('kpi-rebotados', datos.rebotado);
       texto('kpi-fallidos', datos.fallidos);
       texto('kpi-revision', `${datos.revision ?? 0} en revisión`);
-      texto('kpi-ultimo-evento', fecha(datos.ultimo_evento_en, true));
       texto('servicio-ultima', fecha(datos.ultimo_evento_en, true));
     } catch (_) {
       ['total-notificaciones', 'kpi-pendientes', 'kpi-aceptados', 'kpi-fallidos',
-        'kpi-revision', 'kpi-ultimo-evento', 'servicio-ultima'].forEach((id) => texto(id, '—'));
+        'kpi-entregados', 'kpi-rebotados', 'kpi-revision', 'servicio-ultima'].forEach((id) => texto(id, '—'));
       // La tabla sigue disponible aunque falle este endpoint de lectura.
     }
   }
@@ -264,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
       modoEnvio = datos.modo;
       resendConfigurado = datos.configurado === true;
       resendAutoHabilitado = datos.automatico === true;
+      btnConciliarWebhooks.hidden = datos.webhooks_habilitados !== true;
       const pruebas = modoEnvio === 'resend_test';
       btnProcesar.hidden = pruebas;
       btnResend.hidden = !pruebas || !resendConfigurado;
@@ -278,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
       texto('aviso-resend-prueba', pruebas
         ? (resendConfigurado
           ? (resendAutoHabilitado
-            ? `Pruebas automáticas habilitadas (cada ${Math.round(Number(datos.intervaloMs) / 1000)} s). Cada mensaje requiere autorización individual; se usan destinatario fijo y datos ficticios, nunca el correo del candidato.`
+            ? `Trabajador automático activo (cada ${Math.round(Number(datos.intervaloMs) / 1000)} s). Los eventos nuevos pueden enviarse por política global cuando se habilite; las pruebas manuales siguen separadas. Destinatario fijo y datos ficticios.`
             : 'Resend configurado para pruebas manuales. El envío automático está desactivado; no se enviarán correos a candidatos.')
           : 'Resend no tiene la configuración de pruebas completa; comprueba el backend antes de habilitar envíos.')
         : 'Simulación activa. No se enviarán correos mediante el proveedor.');
@@ -287,11 +311,64 @@ document.addEventListener('DOMContentLoaded', () => {
       resendAutoHabilitado = false;
       btnProcesar.hidden = true;
       btnResend.hidden = true;
+      btnConciliarWebhooks.hidden = true;
       texto('servicio-modo', 'No disponible');
       texto('servicio-proveedor', 'Sin confirmar');
       texto('aviso-resend-prueba', 'No fue posible consultar la configuración. No actives envíos hasta revisar el backend.');
     }
   }
+
+  async function cargarPoliticaATS() {
+    const estado = $('estado-politica-ats');
+    const boton = $('btn-politica-ats');
+    const descripcion = $('descripcion-politica-ats');
+    boton.disabled = true;
+    boton.hidden = true;
+    try {
+      const datos = await solicitar('/politica-ats');
+      politicaATS = datos;
+      const activa = datos.habilitado === true;
+      estado.className = `nc-mini-pill ${activa ? 'nc-pill-green' : 'nc-pill-neutral'}`;
+      estado.textContent = activa ? 'Activa para eventos nuevos' : 'Desactivada';
+      boton.hidden = false;
+      boton.disabled = !activa && datos.trabajador_habilitado !== true;
+      $('etiqueta-boton-politica-ats').textContent = activa ? 'Pausar política' : 'Activar política';
+      descripcion.textContent = activa
+        ? 'Activa exclusivamente para eventos nuevos. Postulación, En revisión y Entrevista se envían sin autorización individual. Contratado y Descartado requieren aprobar la comunicación. Solo llega al correo de pruebas, máximo diario según configuración.'
+        : datos.trabajador_habilitado
+          ? 'Política desactivada. Puedes habilitar una sola vez el despacho automático de FUTURAS postulaciones y transiciones ATS. No se procesarán mensajes históricos ni se contactará a candidatos reales.'
+          : 'Política desactivada. Primero debes habilitar el trabajador Resend de pruebas en el backend; no se contactará a candidatos reales.';
+    } catch (_) {
+      politicaATS = null;
+      estado.className = 'nc-mini-pill nc-pill-amber';
+      estado.textContent = 'No disponible';
+      descripcion.textContent = 'No fue posible consultar la política. Comprueba SQL 16c y la conexión con Supabase antes de activar envíos.';
+    }
+  }
+
+  $('btn-politica-ats').addEventListener('click', async () => {
+    const boton = $('btn-politica-ats');
+    if (boton.disabled || !politicaATS) return;
+    const habilitar = politicaATS.habilitado !== true;
+    const mensaje = habilitar
+      ? 'Esta acción habilita de forma GENERAL los correos de prueba para TODAS las postulaciones futuras y cambios a En revisión o Entrevista. Contratado y Descartado conservarán aprobación administrativa. Se enviarán SOLO al destinatario fijo de pruebas, con datos ficticios y límite diario. No se enviará el historial. ¿Activar política?'
+      : 'Se pausará la política de eventos nuevos y se desarmarán sus notificaciones pendientes. Los envíos que ya estén procesándose no podrán detenerse. ¿Pausar política?';
+    if (!await DialogService.confirm(mensaje, {
+      title: habilitar ? 'Activar notificaciones ATS automáticas' : 'Pausar notificaciones ATS automáticas',
+      variant: 'warning', confirmText: habilitar ? 'Activar pruebas automáticas' : 'Pausar política',
+    })) return;
+    boton.disabled = true;
+    try {
+      await solicitar('/politica-ats', 'POST', { habilitado: habilitar });
+      NotificationService.success('Política ATS actualizada', habilitar
+        ? 'Los próximos eventos ATS elegibles se despacharán sin autorización individual, solo al destinatario de pruebas.'
+        : 'La política quedó pausada.');
+      await Promise.all([cargarPoliticaATS(), refrescarDatos()]);
+    } catch (error) {
+      NotificationService.error('No fue posible actualizar la política', error.message);
+      await cargarPoliticaATS();
+    }
+  });
 
   function datoDetalle(contenedor, etiqueta, valor) {
     const dl = elemento('dl', 'nc-detail-entry');
@@ -309,15 +386,23 @@ document.addEventListener('DOMContentLoaded', () => {
     datoDetalle(contenido, 'Evento', ETIQUETAS[n.tipo_evento] || n.tipo_evento);
     datoDetalle(contenido, 'Estado de procesamiento', ESTADOS[n.estado] || n.estado);
     datoDetalle(contenido, 'Tipo de autorización', tipoEnvio(n)[0]);
+    if (n.datos?.auto_ats_version) datoDetalle(contenido, 'Origen de autorización', 'Política automática por evento ATS; sin aprobación por correo');
     datoDetalle(contenido, 'Intentos', `${n.intentos ?? 0}/${n.max_intentos ?? 5}`);
     datoDetalle(contenido, 'Creado', fecha(n.creado_en));
     datoDetalle(contenido, 'Aceptado por proveedor', fecha(n.enviado_en));
+    datoDetalle(contenido, 'Estado de entrega', n.estado === 'aceptado_proveedor'
+      ? (ENTREGA[n.entrega_estado] || 'Pendiente de confirmación del proveedor')
+      : 'No aplicable');
+    datoDetalle(contenido, 'Evento de entrega (Resend)', fecha(n.entrega_evento_en));
     datoDetalle(contenido, 'ID de Resend', n.id_mensaje_proveedor || 'Sin ID registrado');
     datoDetalle(contenido, 'Aprobación de comunicación', esSinAprobar(n) ? 'Pendiente de aprobación' : 'Sin bloqueo de aprobación');
     datoDetalle(contenido, 'Prueba Resend', n.prueba_resend_autorizada ? 'Autorizada' : 'No autorizada');
     datoDetalle(contenido, 'Despacho automático de prueba', n.auto_resend_autorizado ? 'Autorizado' : 'No autorizado');
     if (n.estado === 'aceptado_proveedor') {
-      $('dialog-detalle').querySelector('.nc-dialog-note').textContent = 'Resend aceptó el mensaje, pero la entrega aún no está confirmada. La confirmación de entrega requiere webhooks.';
+      $('dialog-detalle').querySelector('.nc-dialog-note').textContent = n.entrega_estado === 'entregado'
+        ? 'Resend confirmó que el servidor destinatario aceptó el mensaje. No acredita lectura ni bandeja de entrada.'
+        : n.entrega_estado ? 'Resend informó un resultado de entrega. Consulta los eventos firmados para más detalles.'
+        : 'Resend aceptó el envío, pero la entrega aún no está confirmada por webhook.';
     } else {
       $('dialog-detalle').querySelector('.nc-dialog-note').textContent = 'Las acciones disponibles dependen del estado y de las autorizaciones de cada notificación. El correo real del candidato no se utiliza en pruebas.';
     }
@@ -326,10 +411,12 @@ document.addEventListener('DOMContentLoaded', () => {
       acciones.append(btn);
     }
     acciones.append(crearBoton('intentos', 'Ver historial de intentos', n.id_notificacion, 'primary'));
+    if (n.id_mensaje_proveedor) acciones.append(crearBoton('webhooks', 'Eventos de entrega', n.id_notificacion));
     detalleDialog.showModal();
   }
 
   async function verIntentos(id) {
+    $('titulo-intentos').textContent = 'Historial de procesamiento';
     const respuesta = await solicitar(`/${encodeURIComponent(id)}/intentos`);
     const contenedor = $('contenido-intentos');
     contenedor.replaceChildren();
@@ -339,6 +426,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const diagnostico = String(intento.codigo_diagnostico || '—');
       contenedor.append(elemento('p', 'nc-attempt', `${resultado} · ${diagnostico} · ${fecha(intento.creado_en)}`));
     }
+    if (detalleDialog.open) detalleDialog.close();
+    intentosDialog.showModal();
+  }
+
+  async function verWebhooks(id) {
+    const respuesta = await solicitar(`/${encodeURIComponent(id)}/eventos-entrega`);
+    const contenedor = $('contenido-intentos');
+    contenedor.replaceChildren();
+    if (!respuesta.eventos.length) contenedor.append(elemento('p', 'nc-attempt', 'Todavía no hay webhooks de entrega correlacionados.'));
+    for (const evento of respuesta.eventos) {
+      const etiqueta = ENTREGA[TIPOS_ENTREGA[evento.tipo]] || 'Evento Resend';
+      contenedor.append(elemento('p', 'nc-attempt', `${etiqueta} · ${fecha(evento.ocurrido_en)} · Firma verificada`));
+    }
+    $('titulo-intentos').textContent = 'Eventos de entrega (Resend)';
     if (detalleDialog.open) detalleDialog.close();
     intentosDialog.showModal();
   }
@@ -376,6 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (accion === 'intentos') return verIntentos(id);
+    if (accion === 'webhooks') return verWebhooks(id);
     if (!Object.prototype.hasOwnProperty.call(CONFIRMACIONES, accion)) return;
     if (!await DialogService.confirm(CONFIRMACIONES[accion], {
       title: TITULOS_CONFIRMACION[accion],
@@ -406,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   async function refrescarTodo() {
     btnActualizar.disabled = true;
-    try { await cargarConfiguracion(); await refrescarDatos(); }
+    try { await cargarConfiguracion(); await cargarPoliticaATS(); await refrescarDatos(); }
     finally { btnActualizar.disabled = false; }
   }
 
@@ -442,6 +544,20 @@ document.addEventListener('DOMContentLoaded', () => {
       await refrescarDatos();
     } catch (error) { NotificationService.error('Error de conciliación', error.message); }
     finally { btnConciliar.disabled = false; }
+  });
+
+  btnConciliarWebhooks.addEventListener('click', async () => {
+    if (btnConciliarWebhooks.disabled) return;
+    if (!await DialogService.confirm('Se correlacionarán eventos de entrega ya recibidos de Resend. No se enviará ningún correo.', {
+      title: 'Conciliar confirmaciones Resend', variant: 'info', confirmText: 'Conciliar entregas',
+    })) return;
+    btnConciliarWebhooks.disabled = true;
+    try {
+      const r = await solicitar('/conciliar-webhooks', 'POST', {});
+      NotificationService.info('Conciliación Resend', `${r.correlacionados} eventos asociados. Ningún correo enviado.`);
+      await refrescarDatos();
+    } catch (error) { NotificationService.error('No fue posible conciliar', error.message); }
+    finally { btnConciliarWebhooks.disabled = false; }
   });
 
   function restablecerFiltros() { pagina = 1; cargarListado(); }

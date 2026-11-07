@@ -122,7 +122,7 @@
 }
 .nc-kpis {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 13px;
 }
 .nc-kpi {
@@ -859,5 +859,97 @@
   }
   .nc-templates summary small {
     display: none;
+  }
+}
+
+/* 8A.2: política de eventos; aislada de los componentes administrativos globales. */
+.nc-policy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 19px;
+  border: 1px solid #dce6f5;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(27, 54, 103, 0.035);
+}
+.nc-policy-copy {
+  min-width: 0;
+}
+.nc-policy-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+.nc-policy-title > i {
+  color: #2458ed;
+}
+.nc-policy-title h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 850;
+  color: #172c58;
+}
+.nc-policy p {
+  margin: 7px 0 0;
+  max-width: 850px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #5b7090;
+}
+.nc-policy .nc-btn {
+  flex: none;
+}
+@media (max-width: 720px) {
+  .nc-policy {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .nc-policy .nc-btn {
+    align-self: flex-start;
+  }
+}
+
+/* 8B: segundo resultado de entrega, separado de la aceptación por proveedor. */
+.nc-delivery-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 800;
+  color: #586985;
+}
+.nc-delivery-confirmed {
+  color: #138449;
+}
+.nc-delivery-bounced,
+.nc-delivery-complaint,
+.nc-delivery-failed {
+  color: #b72a46;
+}
+.nc-delivery-delayed {
+  color: #9a630b;
+}
+.nc-delivery-unknown {
+  color: #677c98;
+}
+.nc-kpi:nth-child(5) .nc-kpi-icon {
+  background: #def8ee;
+  color: #157a4e;
+}
+.nc-kpi:nth-child(6) .nc-kpi-icon {
+  background: #ffedef;
+  color: #b92c47;
+}
+@media (max-width: 1450px) {
+  .nc-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 720px) {
+  .nc-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

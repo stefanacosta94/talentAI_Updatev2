@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnEliminar = e.target.closest(".btn-eliminar-doc");
     if (!btnEliminar) return;
     const id = btnEliminar.dataset.id;
-    if (confirm("¿Estás seguro de eliminar este documento de la base de conocimiento? La IA ya no podrá consultarlo.")) {
+    if (await DialogService.confirm('¿Eliminar este documento de la base de conocimiento? El asistente ya no podrá utilizarlo para nuevas respuestas.', { title: 'Eliminar documento', variant: 'danger', confirmText: 'Eliminar documento' })) {
       try {
         const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/documentos/${id}`, {
           method: "DELETE",

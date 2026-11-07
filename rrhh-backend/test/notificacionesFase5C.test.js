@@ -98,9 +98,10 @@ test('5C: las rutas de acción siguen bajo JWT y adminOnly', () => {
   assert.doesNotMatch(rutas,/process\.env\.SUPABASE_SERVICE_ROLE_KEY/);
 });
 
-test('5C: UI presenta acciones y mantiene aviso de simulación', () => {
+test('5C: UI conserva simulación, conciliación, historial y aviso de pruebas', () => {
   for(const id of ['btn-procesar-simulacion','btn-conciliar-recepciones','dialog-intentos']) assert.ok(html.includes(id));
-  assert.match(html,/sin enviar correos a candidatos/);
+  assert.match(html,/el envío a candidatos reales permanece desactivado/i);
   assert.match(js,/NotificationService\.info/);
-  assert.match(js,/tdAcciones/);
+  assert.match(js,/accionesDisponibles/);
+  assert.match(js,/\/procesar-simulacion/);
 });

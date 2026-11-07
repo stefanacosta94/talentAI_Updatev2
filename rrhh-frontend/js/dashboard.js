@@ -580,7 +580,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.eliminarVacante = async function (id) {
-    if (!confirm("¿Seguro que deseas eliminar esta vacante?")) return;
+    if (!await DialogService.confirm('Esta vacante se eliminará del catálogo. Verifica que no tenga postulaciones asociadas.', { title: 'Eliminar vacante', variant: 'danger', confirmText: 'Eliminar vacante' })) return;
     try {
       const { respuesta, data } = await fetchJson(
         `${CONFIG.API_URL}/admin/vacantes/${id}`,

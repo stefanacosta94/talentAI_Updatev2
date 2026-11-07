@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Notificaciones de candidatos - TalentAI</title>
+  <title>Centro de notificaciones ATS - TalentAI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/notificaciones.css" />
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex">
 <!-- SIDEBAR -->
@@ -133,75 +134,83 @@
 <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
   <header class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 shrink-0">
     <span class="text-xs font-semibold text-slate-500">Administración</span>
-    <i class="fa-solid fa-chevron-right text-[9px] text-slate-300 mx-3"></i>
-    <span class="text-sm font-extrabold text-blue-950">Notificaciones por correo</span>
+    <i class="fa-solid fa-chevron-right text-[9px] text-slate-300 mx-3" aria-hidden="true"></i>
+    <span class="text-sm font-extrabold text-blue-950">Notificaciones</span>
   </header>
-  <main class="flex-1 overflow-y-auto p-5 md:p-8">
-    <div class="max-w-7xl mx-auto space-y-6">
-      <div class="flex flex-wrap gap-3 items-start justify-between">
-        <div>
-          <p class="uppercase tracking-widest font-bold text-[11px] text-blue-700 mb-1">Comunicación con candidatos</p>
-          <h1 class="text-2xl md:text-3xl font-black text-blue-950">Notificaciones por correo</h1>
-          <p class="text-sm text-slate-500 mt-2">Historial y plantillas para las etapas de selección.</p>
+  <main class="nc-main flex-1 overflow-y-auto" id="contenido-notificaciones">
+    <div class="nc-container">
+      <section class="nc-hero" aria-labelledby="titulo-modulo">
+        <div class="nc-hero-copy">
+          <p class="nc-eyebrow">Comunicación con candidatos</p>
+          <h1 id="titulo-modulo">Centro de notificaciones ATS</h1>
+          <p>Supervisa, filtra y controla las comunicaciones generadas por postulaciones y cambios de etapa.</p>
         </div>
-        <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 max-w-sm">
-          <p class="font-bold text-amber-800 text-xs"><i class="fa-solid fa-flask mr-1"></i> Fase 5C · Procesamiento simulado</p>
-          <p class="text-xs text-amber-800 mt-1">Las postulaciones y cambios del ATS crean eventos pendientes. La simulación registra intentos sin enviar correos a candidatos.</p>
-        </div>
-      </div>
-      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-        <div class="flex flex-wrap gap-3 items-center justify-between">
-          <div><p class="text-xs font-semibold text-slate-500">Eventos registrados</p>
-            <p id="total-notificaciones" class="text-3xl font-black text-blue-950 mt-1">—</p></div>
-          <div class="flex flex-wrap gap-2 items-center">
-            <label for="filtro-notificaciones-estado" class="text-xs font-bold text-slate-600">Estado</label>
-            <select id="filtro-notificaciones-estado" class="border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white">
-              <option value="">Todos</option><option value="pendiente">Pendiente</option>
-              <option value="procesando">Procesando</option><option value="aceptado_proveedor">Aceptado por proveedor</option>
-              <option value="fallido">Fallido</option><option value="cancelado">Cancelado</option><option value="requiere_revision">Requiere revisión</option>
-            </select>
-            <button id="btn-recargar-notificaciones" class="rounded-lg bg-blue-600 text-white text-xs font-bold px-4 py-2 hover:bg-blue-700" type="button">Actualizar</button>
+        <div class="nc-service" aria-label="Estado del servicio de notificaciones">
+          <div class="nc-service-title"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><h2>Estado del servicio</h2></div>
+          <div class="nc-service-grid">
+            <div><p><i class="fa-solid fa-flask" aria-hidden="true"></i> Modo actual</p><span id="servicio-modo" class="nc-mini-pill nc-pill-neutral">Consultando...</span></div>
+            <div><p><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Proveedor</p><span id="servicio-proveedor" class="nc-mini-pill nc-pill-blue">—</span></div>
+            <div><p><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Envío a candidatos</p><span id="servicio-reales" class="nc-mini-pill nc-pill-amber">Desactivado</span></div>
+            <div><p><i class="fa-regular fa-clock" aria-hidden="true"></i> Último evento</p><span id="servicio-ultima" class="nc-mini-pill nc-pill-neutral">—</span></div>
           </div>
         </div>
-        <div class="mt-4 flex flex-wrap gap-2 items-center border-t border-slate-100 pt-4">
-          <button id="btn-procesar-simulacion" type="button" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700">Procesar pendientes (simulación)</button>
-          <button id="btn-procesar-resend-prueba" type="button" hidden class="px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800">Enviar 1 prueba con Resend</button>
-          <button id="btn-conciliar-recepciones" type="button" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50">Conciliar recepciones faltantes</button>
-          <p class="text-xs text-slate-500">La simulación registra un intento y conserva el estado pendiente. Las decisiones finales requieren aprobación.</p>
-          <p id="aviso-resend-prueba" class="w-full text-xs font-semibold text-slate-600" role="status">Fase 8A: el envío automático está apagado por defecto y exige una segunda autorización por evento. Exclusivamente al correo de prueba configurado, con contenido ficticio; no se enviará al candidato.</p>
+      </section>
+
+      <section class="nc-kpis" aria-label="Indicadores globales de notificaciones">
+        <article class="nc-kpi nc-kpi-blue"><div class="nc-kpi-icon"><i class="fa-regular fa-envelope" aria-hidden="true"></i></div><div><p>Eventos registrados</p><strong id="total-notificaciones">—</strong></div></article>
+        <article class="nc-kpi nc-kpi-amber"><div class="nc-kpi-icon"><i class="fa-regular fa-hourglass-half" aria-hidden="true"></i></div><div><p>Pendientes</p><strong id="kpi-pendientes">—</strong></div></article>
+        <article class="nc-kpi nc-kpi-green"><div class="nc-kpi-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></div><div><p>Aceptados por Resend</p><strong id="kpi-aceptados">—</strong></div></article>
+        <article class="nc-kpi nc-kpi-red"><div class="nc-kpi-icon"><i class="fa-solid fa-xmark" aria-hidden="true"></i></div><div><p>Fallidos</p><strong id="kpi-fallidos">—</strong><small id="kpi-revision">— en revisión</small></div></article>
+        <article class="nc-kpi nc-kpi-slate"><div class="nc-kpi-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></div><div><p>Último evento</p><strong id="kpi-ultimo-evento" class="nc-kpi-date">—</strong></div></article>
+      </section>
+
+      <section class="nc-toolbar" aria-label="Filtros y operaciones">
+        <div class="nc-filters">
+          <label class="nc-search" for="buscar-notificaciones"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="sr-only">Buscar candidato o correo</span><input id="buscar-notificaciones" type="search" placeholder="Buscar candidato o correo" maxlength="80" autocomplete="off" /></label>
+          <label class="nc-select"><span class="sr-only">Filtrar por estado</span><select id="filtro-notificaciones-estado"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="procesando">Procesando</option><option value="aceptado_proveedor">Aceptado por proveedor</option><option value="fallido">Fallido</option><option value="requiere_revision">Requiere revisión</option><option value="cancelado">Cancelado</option></select></label>
+          <label class="nc-select"><span class="sr-only">Filtrar por evento</span><select id="filtro-notificaciones-evento"><option value="">Todos los eventos</option><option value="postulacion_recibida">Postulación recibida</option><option value="en_revision">En revisión</option><option value="entrevista">Entrevista</option><option value="contratado">Contratado</option><option value="descartado">Descartado</option></select></label>
+          <label class="nc-select"><span class="sr-only">Filtrar por autorización de envío</span><select id="filtro-notificaciones-modo"><option value="">Todos los modos</option><option value="automatico">Automático autorizado</option><option value="prueba_manual">Prueba manual autorizada</option><option value="sin_autorizacion">Sin autorizar</option></select></label>
         </div>
-        <div class="overflow-x-auto mt-5">
-          <table class="min-w-[1060px] w-full text-xs text-left">
-            <thead class="bg-slate-50 border-y border-slate-200 text-[10px] uppercase tracking-wider text-slate-500">
-              <tr><th class="p-4">Candidato</th><th class="p-4">Correo</th><th class="p-4">Evento</th><th class="p-4">Estado</th><th class="p-4">Intentos</th><th class="p-4">Acciones</th><th class="p-4">Fecha</th></tr>
-            </thead><tbody id="notificaciones-email-body"></tbody>
+        <div class="nc-tools">
+          <button id="btn-recargar-notificaciones" class="nc-btn nc-btn-primary" type="button"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar</button>
+          <button id="btn-conciliar-recepciones" class="nc-btn nc-btn-outline" type="button"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Conciliar recepciones</button>
+          <button id="btn-procesar-simulacion" class="nc-btn nc-btn-outline" type="button" hidden><i class="fa-solid fa-play" aria-hidden="true"></i> Simular pendientes</button>
+          <button id="btn-procesar-resend-prueba" class="nc-btn nc-btn-link" type="button" hidden><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> Enviar prueba manual</button>
+        </div>
+        <p id="aviso-resend-prueba" class="nc-service-note" role="status" aria-live="polite">Comprobando la configuración de envío...</p>
+      </section>
+
+      <section class="nc-history" aria-labelledby="titulo-historial">
+        <div class="nc-history-heading"><div class="nc-history-title"><h2 id="titulo-historial">Historial de notificaciones</h2><span id="etiqueta-registros" class="nc-soft-count">— registros</span></div><p id="detalle-filtros" class="nc-secondary">Mostrando las notificaciones más recientes</p></div>
+        <div class="nc-table-scroll" role="region" aria-label="Tabla de notificaciones" tabindex="0">
+          <table class="nc-table">
+            <thead><tr><th scope="col">Candidato</th><th scope="col">Evento</th><th scope="col">Estado</th><th scope="col">Autorización</th><th scope="col">Intentos</th><th scope="col">Última actividad</th><th scope="col">Acciones</th></tr></thead>
+            <tbody id="notificaciones-email-body"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-end gap-3 mt-4">
-          <button id="pag-anterior" class="px-3 py-2 text-xs border rounded-lg disabled:opacity-40" type="button">Anterior</button>
-          <span id="paginacion-notificaciones" class="text-xs text-slate-500">Página 1</span>
-          <button id="pag-siguiente" class="px-3 py-2 text-xs border rounded-lg disabled:opacity-40" type="button">Siguiente</button>
-        </div>
+        <div class="nc-pagination"><span id="paginacion-notificaciones" aria-live="polite">Página 1</span><div><button id="pag-anterior" type="button" class="nc-btn nc-btn-outline">Anterior</button><button id="pag-siguiente" type="button" class="nc-btn nc-btn-outline">Siguiente</button></div></div>
       </section>
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-        <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
-          <div><h2 class="font-extrabold text-blue-950">Vista previa de plantillas</h2>
-            <p class="text-xs text-slate-500 mt-1">Datos completamente ficticios. No se envía ningún correo al abrir una plantilla.</p></div>
-          <label class="text-xs font-bold text-slate-700">Evento
-            <select id="plantilla-evento" class="block mt-1 border border-slate-200 rounded-lg p-2 bg-white"></select>
-          </label>
-        </div>
-        <p class="text-xs font-bold text-slate-600 mb-3">Asunto: <span class="font-semibold text-slate-900" id="plantilla-asunto">Selecciona un evento</span></p>
-        <iframe id="plantilla-preview" title="Vista previa del correo" sandbox="" referrerpolicy="no-referrer" class="block w-full rounded-xl border border-slate-200 bg-slate-50 h-[520px]"></iframe>
-      </section>
+
+      <p class="nc-footnote"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Los eventos se generan automáticamente desde el ATS. <strong>En este entorno, el envío a candidatos reales permanece desactivado</strong>; los correos de prueba requieren autorización individual. La aceptación de Resend no confirma la entrega.</span></p>
+
+      <details id="panel-plantillas" class="nc-templates">
+        <summary><i class="fa-regular fa-file-lines" aria-hidden="true"></i><span>Vista previa de plantillas</span><small>Contenido ficticio, sin envío</small><i class="fa-solid fa-chevron-down nc-expand" aria-hidden="true"></i></summary>
+        <div class="nc-templates-content"><div class="nc-templates-header"><div><h2>Vista previa de plantillas</h2><p>Esta visualización no envía mensajes. Se utilizan datos de demostración.</p></div><label>Evento <select id="plantilla-evento"></select></label></div><p class="nc-preview-subject">Asunto: <strong id="plantilla-asunto">Selecciona un evento</strong></p><iframe id="plantilla-preview" title="Vista previa del correo" sandbox="" referrerpolicy="no-referrer" loading="lazy"></iframe></div>
+      </details>
     </div>
-      <dialog id="dialog-intentos" class="w-[min(94vw,600px)] rounded-xl border border-slate-200 p-0 shadow-xl backdrop:bg-slate-900/50">
-        <div class="p-5">
-          <div class="flex items-center justify-between gap-2"><h2 class="font-bold text-slate-900">Historial de procesamiento</h2><button id="btn-cerrar-intentos" type="button" class="text-xs font-bold text-slate-500 hover:text-slate-900">Cerrar</button></div>
-          <p class="text-xs text-slate-500 mt-2">No se muestra contenido de correos ni credenciales.</p>
-          <div id="contenido-intentos" class="mt-4 space-y-2 text-sm text-slate-700"></div>
-        </div>
-      </dialog>
+
+    <dialog id="dialog-detalle" class="nc-dialog" aria-labelledby="titulo-detalle">
+      <div class="nc-dialog-header"><div><p class="nc-eyebrow">Comunicación ATS</p><h2 id="titulo-detalle">Detalle de notificación</h2></div><button id="btn-cerrar-detalle" type="button" class="nc-close" aria-label="Cerrar detalle"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+      <div id="contenido-detalle" class="nc-detail-grid"></div>
+      <p class="nc-dialog-note">Las acciones disponibles dependen del estado y de las autorizaciones de cada notificación.</p>
+      <div id="acciones-detalle" class="nc-dialog-actions"></div>
+    </dialog>
+
+    <dialog id="dialog-intentos" class="nc-dialog" aria-labelledby="titulo-intentos">
+      <div class="nc-dialog-header"><div><p class="nc-eyebrow">Auditoría del proceso</p><h2 id="titulo-intentos">Historial de procesamiento</h2></div><button id="btn-cerrar-intentos" type="button" class="nc-close" aria-label="Cerrar historial"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+      <p class="nc-dialog-note">El historial no muestra el contenido de los correos ni credenciales.</p>
+      <div id="contenido-intentos" class="nc-attempts"></div>
+    </dialog>
   </main>
 </div>
 <script src="js/config.js"></script>

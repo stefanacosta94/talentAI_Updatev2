@@ -297,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
       modalEmpleado.classList.remove("hidden");
     } else if (action === "toggle-estado") {
       const nuevoEstado = emp.estado === "Activo" ? "Inactivo" : "Activo";
-      if (confirm(`¿Estás seguro de marcar a ${SecurityUtils.escapeHTML(emp.nombre)} como ${nuevoEstado}?`)) {
+      if (await DialogService.confirm(`¿Marcar a ${emp.nombre} como ${nuevoEstado}?`, { title: 'Cambiar estado de empleado', variant: 'warning', confirmText: 'Guardar cambio' })) {
         try {
           const payload = { estado: nuevoEstado };
           const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/empleados/${id}`, {
@@ -317,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } else if (action === "eliminar") {
-      if (confirm(`¿Estás completamente seguro de eliminar a ${SecurityUtils.escapeHTML(emp.nombre)}? Esta acción no se puede deshacer.`)) {
+      if (await DialogService.confirm(`¿Eliminar a ${emp.nombre}? Esta acción no se puede deshacer.`, { title: 'Eliminar empleado', variant: 'danger', confirmText: 'Eliminar empleado' })) {
         try {
           const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/empleados/${id}`, {
             method: "DELETE",

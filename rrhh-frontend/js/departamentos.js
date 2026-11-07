@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const b = e.target.closest("button[data-action]"); if (!b) return;
     const d = records.find(x => String(x.id_departamento) === b.dataset.id); if (!d) return;
     if (b.dataset.action === "edit") { editId = d.id_departamento; input.value = d.nombre; guardar.textContent = "Guardar cambios"; input.focus(); return; }
-    if (!confirm(`¿Eliminar el departamento «${d.nombre}»? Si está asociado a empleados o vacantes, no podrá eliminarse.`)) return;
+    if (!await DialogService.confirm(`¿Eliminar el departamento «${d.nombre}»? Si está asociado a empleados o vacantes, no podrá eliminarse.`, { title: 'Eliminar departamento', variant: 'danger', confirmText: 'Eliminar departamento' })) return;
     const data = await request(`departamentos/${d.id_departamento}`, { method: "DELETE" });
     if (data) { NotificationService.success("Departamento eliminado", "El catálogo se actualizó."); await load(); }
   });

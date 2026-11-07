@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formContainer.classList.remove("hidden");
       formContainer.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (action === "eliminar" && usr) {
-      if (confirm(`¿Estás seguro de eliminar el acceso a ${SecurityUtils.escapeHTML(usr.nombre)}?`)) {
+      if (await DialogService.confirm(`¿Estás seguro de eliminar el acceso a ${usr.nombre}?`, { title: 'Revocar acceso de usuario', variant: 'danger', confirmText: 'Eliminar acceso' })) {
         try {
           const { res, data } = await fetchJson(`${CONFIG.API_URL}/admin/usuarios/${id}`, {
             method: "DELETE",

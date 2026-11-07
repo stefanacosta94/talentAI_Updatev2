@@ -49,9 +49,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const usr = users.find(x => x.id === id);
     if (!selected || !usr || id === currentUser?.id) return;
     if (selected.value === usr.rol) return NotificationService.info("Sin cambios", "El usuario ya tiene ese rol.");
-    if (!confirm(`¿Cambiar el rol de ${usr.nombre} a ${selected.value}?`)) { selected.value = usr.rol; return; }
+    if (btn.disabled) return;
     btn.disabled = true;
     try {
+      if (!await DialogService.confirm(`¿Cambiar el rol de ${usr.nombre} a ${selected.value}? Los permisos del usuario se modificarán al confirmar.`, { title: 'Cambiar permisos de acceso', variant: 'warning', confirmText: 'Cambiar rol' })) { selected.value = usr.rol; return; }
       const data = await request(`usuarios/${encodeURIComponent(id)}/rol`, { method: "PUT", body: JSON.stringify({ nuevo_rol: selected.value }) });
       if (data) { NotificationService.success("Rol actualizado", "El cambio de permisos fue registrado."); await load(); }
       else selected.value = usr.rol;

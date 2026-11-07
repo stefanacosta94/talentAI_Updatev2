@@ -120,6 +120,6 @@ test('5D: rutas protegidas y UI hacen explícito que no hay entrega ni envío a 
   for (const accion of ['autorizar-prueba-resend','procesar-resend-prueba','configuracion-envio']) assert.ok(rutas.includes(accion));
   assert.match(html,/btn-procesar-resend-prueba/);
   assert.match(js,/prueba_resend_autorizada/);
-  assert.match(js,/NO confirma entrega/);
-  assert.match(js,/no se enviará al candidato/i);
+  assert.match(js,/la entrega aún no está confirmada/i);
+  assert.match(js,/nunca el correo del candidato/i);
 });

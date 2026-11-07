@@ -212,6 +212,230 @@ const NotificationService = (() => {
 })();
 
 // ==========================================
+// DIÁLOGOS TALENTAI (asíncronos y accesibles)
+// ==========================================
+// No sustituir window.confirm/alert/prompt: son APIs síncronas del navegador.
+// Usar `await DialogService.confirm(...)` antes de acciones sensibles.
+const DialogService = (() => {
+  const VARIANTS = Object.freeze({
+    info: { symbol: 'i', title: 'Confirmar operación' },
+    warning: { symbol: '!', title: 'Revisar operación' },
+    danger: { symbol: '!', title: 'Confirmar acción sensible' },
+    success: { symbol: '✓', title: 'Operación completada' },
+  });
+  let queue = Promise.resolve();
+  let counter = 0;
+
+  function ensureStyles() {
+    if (document.getElementById('talentai-dialog-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'talentai-dialog-styles';
+    style.textContent = `
+      .ta-dialog {
+        width: min(460px, calc(100vw - 32px)); max-width: calc(100vw - 32px);
+        max-height: min(90vh, 680px); overflow-y: auto;
+        position: fixed; margin: auto; padding: 0;
+        border: 1px solid #dbe4f2; border-radius: 20px;
+        background: #fff; color: #18294b;
+        box-shadow: 0 28px 75px rgba(13, 30, 65, .22);
+        font-family: inherit;
+      }
+      .ta-dialog::backdrop { background: rgba(10, 23, 49, .55); backdrop-filter: blur(3px); }
+      .ta-dialog__body { padding: 25px 27px 16px; }
+      .ta-dialog__top { display: flex; align-items: flex-start; gap: 13px; }
+      .ta-dialog__symbol {
+        flex: 0 0 44px; height: 44px; border-radius: 13px;
+        display: grid; place-items: center;
+        font-size: 24px; font-weight: 900; line-height: 1;
+        background: #eaf1ff; color: #2357cd;
+      }
+      .ta-dialog[data-variant="danger"] .ta-dialog__symbol { background: #fff0f2; color: #c5294b; }
+      .ta-dialog[data-variant="warning"] .ta-dialog__symbol { background: #fff3dd; color: #a96308; }
+      .ta-dialog[data-variant="success"] .ta-dialog__symbol { background: #e5f8ed; color: #177245; }
+      .ta-dialog__heading { min-width: 0; padding-top: 2px; }
+      .ta-dialog__eyebrow {
+        margin: 0 0 5px; font-size: 10px; letter-spacing: .11em;
+        text-transform: uppercase; color: #4465a3; font-weight: 850;
+      }
+      .ta-dialog__title {
+        margin: 0; color: #142653; font-size: 20px; line-height: 1.28;
+        letter-spacing: -.025em; font-weight: 850;
+      }
+      .ta-dialog__message {
+        margin: 17px 0 4px; color: #51627e; font-size: 13px;
+        line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere;
+      }
+      .ta-dialog__field { margin: 16px 0 4px; }
+      .ta-dialog__field-label { display: block; font-size: 12px; color: #364b6c; font-weight: 750; margin-bottom: 7px; }
+      .ta-dialog__input {
+        box-sizing: border-box; width: 100%; border: 1px solid #ccd9ec;
+        border-radius: 10px; padding: 11px 12px; font: inherit; font-size: 13px; outline: 0;
+        color: #172b51; background: #fff;
+      }
+      .ta-dialog__input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .10); }
+      .ta-dialog__error { margin: 6px 0 0; font-size: 11px; color: #ae2e48; }
+      .ta-dialog__actions {
+        display: flex; justify-content: flex-end; gap: 9px;
+        flex-wrap: wrap; padding: 16px 27px 24px;
+      }
+      .ta-dialog__btn {
+        min-height: 40px; padding: 10px 18px; border: 1px solid transparent;
+        border-radius: 10px; font: inherit; font-size: 12px; font-weight: 800;
+        cursor: pointer; transition: background .15s ease, box-shadow .15s ease;
+      }
+      .ta-dialog__btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+      .ta-dialog__btn--cancel { background: #f2f5fa; color: #344867; border-color: #e0e7f1; }
+      .ta-dialog__btn--cancel:hover { background: #e8edf6; }
+      .ta-dialog__btn--ok { background: #2459e6; color: #fff; }
+      .ta-dialog__btn--ok:hover { background: #1747c9; }
+      .ta-dialog[data-variant="danger"] .ta-dialog__btn--ok { background: #be294a; }
+      .ta-dialog[data-variant="danger"] .ta-dialog__btn--ok:hover { background: #9e1c3a; }
+      .ta-dialog[data-variant="warning"] .ta-dialog__btn--ok { background: #a96308; }
+      .ta-dialog[data-variant="warning"] .ta-dialog__btn--ok:hover { background: #8d5005; }
+      @media (max-width: 480px) {
+        .ta-dialog__body { padding: 20px 19px 12px; }
+        .ta-dialog__actions { padding: 14px 19px 20px; }
+        .ta-dialog__btn { flex: 1 1 auto; }
+        .ta-dialog__title { font-size: 18px; }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .ta-dialog[open] { animation: ta-dialog-appear .17s ease-out; }
+        @keyframes ta-dialog-appear { from { opacity: .7; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: none; } }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function node(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined) el.textContent = String(text);
+    return el;
+  }
+
+  function present({ kind, message, options }) {
+    return new Promise((resolve) => {
+      ensureStyles();
+      const variant = Object.hasOwn(VARIANTS, options.variant) ? options.variant : 'info';
+      const dialog = node('dialog', 'ta-dialog');
+      dialog.dataset.variant = variant;
+      const id = `talentai-dialog-${++counter}`;
+      dialog.setAttribute('aria-labelledby', `${id}-title`);
+      dialog.setAttribute('aria-describedby', `${id}-message`);
+      dialog.setAttribute('aria-modal', 'true');
+      const body = node('div', 'ta-dialog__body');
+      const top = node('div', 'ta-dialog__top');
+      const symbol = node('span', 'ta-dialog__symbol', VARIANTS[variant].symbol);
+      symbol.setAttribute('aria-hidden', 'true');
+      const heading = node('div', 'ta-dialog__heading');
+      heading.append(
+        node('p', 'ta-dialog__eyebrow', options.eyebrow || 'TalentAI · Administración'),
+      );
+      const title = node('h2', 'ta-dialog__title', options.title || VARIANTS[variant].title);
+      title.id = `${id}-title`;
+      heading.append(title);
+      top.append(symbol, heading);
+      const msg = node('p', 'ta-dialog__message', message);
+      msg.id = `${id}-message`;
+      body.append(top, msg);
+
+      let input = null;
+      let error = null;
+      if (kind === 'prompt') {
+        const field = node('div', 'ta-dialog__field');
+        const label = node('label', 'ta-dialog__field-label', options.label || 'Respuesta');
+        label.htmlFor = `${id}-input`;
+        input = node('input', 'ta-dialog__input');
+        input.id = `${id}-input`;
+        input.type = 'text';
+        input.value = String(options.defaultValue ?? '');
+        input.maxLength = Math.max(1, Math.min(1000, Number(options.maxLength) || 250));
+        if (options.placeholder) input.placeholder = String(options.placeholder);
+        error = node('p', 'ta-dialog__error', 'Este campo es obligatorio.');
+        error.hidden = true;
+        field.append(label, input, error);
+        body.append(field);
+      }
+
+      const actions = node('div', 'ta-dialog__actions');
+      const btnCancel = kind === 'alert' ? null : node('button', 'ta-dialog__btn ta-dialog__btn--cancel', options.cancelText || 'Cancelar');
+      const btnOk = node('button', 'ta-dialog__btn ta-dialog__btn--ok', options.confirmText || (kind === 'alert' ? 'Entendido' : 'Confirmar'));
+      btnOk.type = 'button';
+      if (btnCancel) { btnCancel.type = 'button'; actions.append(btnCancel); }
+      actions.append(btnOk);
+      dialog.append(body, actions);
+      const previousFocus = document.activeElement;
+      let settled = false;
+      const cancelValue = kind === 'prompt' ? null : false;
+      function finish(value) {
+        if (settled) return;
+        settled = true;
+        if (dialog.open) dialog.close();
+        dialog.remove();
+        if (previousFocus?.isConnected && typeof previousFocus.focus === 'function') {
+          previousFocus.focus({ preventScroll: true });
+        }
+        resolve(value);
+      }
+      function accept() {
+        if (input) {
+          if (options.required && !input.value.trim()) {
+            error.hidden = false;
+            input.focus();
+            return;
+          }
+          finish(input.value);
+        } else {
+          finish(true);
+        }
+      }
+      btnOk.addEventListener('click', accept);
+      btnCancel?.addEventListener('click', () => finish(cancelValue));
+      dialog.addEventListener('cancel', (event) => {
+        event.preventDefault();
+        finish(cancelValue);
+      });
+      dialog.addEventListener('click', (event) => {
+        // Clic en el backdrop: nunca confirma una operación.
+        if (event.target === dialog) finish(cancelValue);
+      });
+      dialog.addEventListener('close', () => finish(cancelValue));
+      if (input) {
+        input.addEventListener('input', () => { error.hidden = true; });
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') { event.preventDefault(); accept(); }
+        });
+      }
+      document.body.append(dialog);
+      try {
+        dialog.showModal();
+        // Nunca seleccionar por defecto el botón destructivo.
+        if (input) input.focus();
+        else if (btnCancel) btnCancel.focus();
+        else btnOk.focus();
+      } catch (_) {
+        // Ante fallo del diálogo, abortar de forma segura.
+        finish(cancelValue);
+        if (typeof NotificationService !== 'undefined') {
+          NotificationService.error('Confirmación no disponible', 'No se realizó ningún cambio. Actualiza la página e intenta nuevamente.');
+        }
+      }
+    });
+  }
+  function schedule(kind, message, options = {}) {
+    const run = queue.then(() => present({ kind, message, options }));
+    // Serializa diálogos simultáneos; un rechazo no bloquea los siguientes.
+    queue = run.then(() => undefined, () => undefined);
+    return run;
+  }
+  return Object.freeze({
+    confirm: (message, options = {}) => schedule('confirm', message, options),
+    alert: (message, options = {}) => schedule('alert', message, options),
+    prompt: (message, options = {}) => schedule('prompt', message, options),
+  });
+})();
+
+// ==========================================
 // GUARDIÁN DE SESIÓN ESTRICTO
 // ==========================================
 (function () {

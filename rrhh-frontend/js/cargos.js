@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const b = e.target.closest("button[data-action]"); if (!b) return;
     const c = cargos.find(x => String(x.id_cargo) === b.dataset.id); if (!c) return;
     if (b.dataset.action === "edit") { editId = c.id_cargo; input.value = c.nombre; guardar.textContent = "Guardar cambios"; input.focus(); return; }
-    if (!confirm(`¿Eliminar el cargo «${c.nombre}»?`)) return;
+    if (!await DialogService.confirm(`¿Eliminar el cargo «${c.nombre}»?`, { title: 'Eliminar cargo laboral', variant: 'danger', confirmText: 'Eliminar cargo' })) return;
     const data = await request(`cargos/${c.id_cargo}`, { method: "DELETE" });
     if (data) { NotificationService.success("Cargo eliminado", "El registro fue retirado."); await load(); }
   });

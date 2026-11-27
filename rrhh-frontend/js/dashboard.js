@@ -47,11 +47,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // 2. Referencias al DOM (Panel Central)
   const contadorVacantes = document.getElementById("contador-vacantes");
   const btnLogout = document.getElementById("btn-logout");
-  const contenedorEmpleados = document.getElementById(
-    "contenedor-empleados-seccion",
-  );
+  const contenedorEmpleados = document.getElementById("contenedor-empleados");
   const contadorEmpleados = document.getElementById("contador-empleados");
-  const contadorAplicaciones = document.getElementById("contador-aplicaciones"); // 👈 NUEVA REFERENCIA
+  const contadorAplicaciones = document.getElementById("contador-aplicaciones");
   const formEmpleado = document.getElementById("form-empleado");
   const btnGuardarEmpleado = document.getElementById("btn-guardar-empleado");
 
@@ -91,6 +89,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Variables globales
   let vacantesGlobales = [];
   let departamentosGlobales = [];
+
+  // La API de vacantes devuelve id_departamento, no el objeto relacionado.
+  // Resolver el nombre desde el catálogo asegura consistencia en resumen,
+  // tabla, filtros y detalle, sin asumir que todas son del área "General".
+  function obtenerNombreDepartamento(vacante) {
+    const id = vacante?.id_departamento;
+    const asociado = id === null || id === undefined || id === ""
+      ? null
+      : departamentosGlobales.find(
+          (d) => Number(d.id_departamento) === Number(id),
+        );
+    return asociado?.nombre || vacante?.departamentos?.nombre ||
+      vacante?.departamento || "Sin departamento";
+  }
 
   // ==========================================
   // UTILIDAD: NOTIFICACIONES UX (TOASTS)
@@ -203,6 +215,12 @@ document.addEventListener("DOMContentLoaded", () => {
       history.replaceState(null, "", `#${targetId}`);
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
+  });
+
+  document.getElementById("btn-ver-todas-vacantes")?.addEventListener("click", () => {
+    mostrarSeccion("seccion-vacantes");
+    history.replaceState(null, "", "#seccion-vacantes");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   // ==========================================
@@ -329,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       if (!respuesta.ok || !data.exito) throw new Error(data.error);
 
-      if (contadorEmpleados) contadorEmpleados.innerText = data.total;
+      // El KPI global se obtiene exclusivamente de /admin/stats (conteo exacto).
       if (contenedorEmpleados) contenedorEmpleados.innerHTML = "";
 
       if (data.empleados.length === 0 && contenedorEmpleados) {
@@ -361,6 +379,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // GESTIÓN DE ESTADÍSTICAS DEL DASHBOARD
   // ==========================================
   async function cargarStatsDashboard() {
+    const botonActualizar = document.getElementById("btn-actualizar-metricas");
+    if (botonActualizar) { botonActualizar.disabled = true; botonActualizar.setAttribute('aria-busy', 'true'); }
     try {
       const { respuesta, data } = await fetchJson(
         `${CONFIG.API_URL}/admin/stats`,
@@ -374,11 +394,64 @@ document.addEventListener("DOMContentLoaded", () => {
         if (contadorVacantes) contadorVacantes.innerText = data.stats.total_vacantes;
         if (contadorAplicaciones) contadorAplicaciones.innerText = data.stats.total_aplicaciones;
         if (contadorEmpleados) contadorEmpleados.innerText = data.stats.total_empleados;
+        const unicos = document.getElementById("stats-candidatos-unicos");
+        const pendientes = document.getElementById("stats-pendientes-ia");
+        const promedio = document.getElementById("stats-promedio-ia");
+        const etapas = document.getElementById("stats-etapas-ats");
+        if (unicos) unicos.textContent = Number(data.stats.total_candidatos_unicos || 0).toLocaleString("es-HN");
+        if (pendientes) pendientes.textContent = Number(data.stats.pendientes_ia || 0).toLocaleString("es-HN");
+        if (promedio) promedio.textContent = Number(data.stats.evaluadas_ia || 0) > 0
+          ? `${data.stats.score_promedio_ia}%` : "Sin evaluaciones";
+        if (etapas) {
+          const conteos = new Map((data.stats.por_estado || []).map(e => [e.estado, Number(e.cantidad) || 0]));
+          const total = Number(data.stats.total_aplicaciones) || 0;
+          const estados = [
+            ['Recibida', 'fa-inbox'], ['En Revisión', 'fa-magnifying-glass'],
+            ['Entrevista', 'fa-user-group'], ['Contratado', 'fa-circle-check'],
+            ['Descartado', 'fa-user-xmark'],
+          ];
+          etapas.replaceChildren();
+          for (const [estado, icono] of estados) {
+            const valor = conteos.get(estado) ?? 0;
+            const porcentaje = total > 0 ? Math.max(0, Math.min(100, valor / total * 100)) : 0;
+            const bloque = document.createElement('div');
+            bloque.className = 'dash-stage-row';
+            const cabecera = document.createElement('div');
+            cabecera.className = 'dash-stage-heading';
+            const etiqueta = document.createElement('span');
+            etiqueta.className = 'dash-stage-label';
+            const i = document.createElement('i');
+            i.className = `fa-solid ${icono}`;
+            i.setAttribute('aria-hidden', 'true');
+            etiqueta.append(i, document.createTextNode(estado));
+            const cantidad = document.createElement('strong');
+            cantidad.textContent = `${valor} · ${Math.round(porcentaje)}%`;
+            cabecera.append(etiqueta, cantidad);
+            const pista = document.createElement('div');
+            pista.className = 'dash-stage-track';
+            pista.setAttribute('role', 'progressbar');
+            pista.setAttribute('aria-label', `${estado}: ${valor} de ${total} postulaciones`);
+            pista.setAttribute('aria-valuemin', '0');
+            pista.setAttribute('aria-valuemax', '100');
+            pista.setAttribute('aria-valuenow', String(Math.round(porcentaje)));
+            const relleno = document.createElement('span');
+            relleno.className = estado === 'Descartado' ? 'dash-stage-fill dash-stage-muted' : 'dash-stage-fill';
+            relleno.style.width = `${porcentaje}%`;
+            pista.append(relleno);
+            bloque.append(cabecera, pista);
+            etapas.append(bloque);
+          }
+        }
       }
     } catch (err) {
       console.error("Error al cargar estadísticas:", err.message);
+      const etapas = document.getElementById("stats-etapas-ats");
+      if (etapas) etapas.textContent = "No fue posible actualizar los indicadores. Inténtalo de nuevo.";
+    } finally {
+      if (botonActualizar) { botonActualizar.disabled = false; botonActualizar.removeAttribute('aria-busy'); }
     }
   }
+  document.getElementById("btn-actualizar-metricas")?.addEventListener("click", cargarStatsDashboard);
 
   // ==========================================
   // 7. GESTIÓN DE VACANTES
@@ -395,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!respuesta.ok || !data.exito) throw new Error(data.error);
 
       vacantesGlobales = data.vacantes;
-      if (contadorVacantes) contadorVacantes.innerText = data.total;
+      // El KPI global se obtiene exclusivamente de /admin/stats (conteo exacto).
 
       renderizarTablaVacantes(vacantesGlobales);
       renderizarResumenVacantesCards(vacantesGlobales);
@@ -417,15 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
     vacantes.forEach((v) => {
       const idVacante = v.id_vacante || v.id;
 
-      let nombreDepto = "General";
-      if (v.id_departamento) {
-        const deptoEncontrado = departamentosGlobales.find(
-          (d) => Number(d.id_departamento) === Number(v.id_departamento),
-        );
-        if (deptoEncontrado) nombreDepto = deptoEncontrado.nombre;
-      } else if (v.departamentos?.nombre) {
-        nombreDepto = v.departamentos.nombre;
-      }
+      const nombreDepto = obtenerNombreDepartamento(v);
 
       const fechaFormateada = v.fecha_creacion
         ? v.fecha_creacion
@@ -461,22 +526,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const resumenContainer = document.getElementById("resumen-vacantes-cards");
     if (!resumenContainer) return;
 
-    resumenContainer.innerHTML = "";
-    if (vacantes.length === 0) {
-      resumenContainer.innerHTML = `<p class="text-xs text-slate-400">No hay vacantes activas.</p>`;
+    const recientes = [...vacantes]
+      .sort((a, b) => Number(b.id_vacante ?? b.id) - Number(a.id_vacante ?? a.id))
+      .slice(0, 3);
+    const resumenTotal = document.getElementById("resumen-vacantes-total");
+    if (resumenTotal) {
+      resumenTotal.textContent = `Mostrando ${recientes.length} de ${vacantes.length} vacantes`;
+    }
+
+    resumenContainer.replaceChildren();
+    if (recientes.length === 0) {
+      resumenContainer.innerHTML = `<p class="text-xs text-slate-400">No hay vacantes registradas.</p>`;
       return;
     }
 
-    vacantes.slice(0, 3).forEach((v) => {
+    recientes.forEach((v) => {
       const card = document.createElement("div");
       card.className =
-        "p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between";
+        "p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-3";
+      const estado = v.estado || "Sin estado";
+      const activa = estado === "Activa" || estado === "Abierta";
+      const claseEstado = activa
+        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+        : "bg-slate-100 text-slate-600 border-slate-200";
       card.innerHTML = `
-                <div>
-                    <h6 class="text-xs font-bold text-blue-950">${SecurityUtils.escapeHTML(v.titulo)}</h6>
-                    <p class="text-[10px] text-slate-400 font-medium">${SecurityUtils.escapeHTML(v.departamentos?.nombre || v.departamento || "General")}</p>
-                </div>
-            `;
+        <div class="min-w-0">
+          <h6 class="text-xs font-bold text-blue-950">${SecurityUtils.escapeHTML(v.titulo)}</h6>
+          <p class="text-[10px] text-slate-500 font-medium mt-1">${SecurityUtils.escapeHTML(obtenerNombreDepartamento(v))}</p>
+        </div>
+        <span class="shrink-0 text-[10px] font-bold px-2 py-1 rounded-full border ${claseEstado}">${SecurityUtils.escapeHTML(estado)}</span>
+      `;
       resumenContainer.appendChild(card);
     });
   }
@@ -502,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("filtro-fecha-vacante")?.value || "";
 
     const filtradas = vacantesGlobales.filter((v) => {
-      const deptoNombre = v.departamentos?.nombre || v.departamento || "";
+      const deptoNombre = obtenerNombreDepartamento(v);
       const fechaVacante =
         v.fecha_creacion || (v.created_at ? v.created_at.split("T")[0] : "");
 
@@ -528,15 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (!vacante) return;
 
-    let nombreDepto = "General";
-    if (vacante.id_departamento) {
-      const deptoEncontrado = departamentosGlobales.find(
-        (d) => Number(d.id_departamento) === Number(vacante.id_departamento),
-      );
-      if (deptoEncontrado) nombreDepto = deptoEncontrado.nombre;
-    } else if (vacante.departamentos?.nombre) {
-      nombreDepto = vacante.departamentos.nombre;
-    }
+    const nombreDepto = obtenerNombreDepartamento(vacante);
 
     document.getElementById("detalle-vacante-titulo").textContent =
       vacante.titulo;
@@ -750,11 +821,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // INICIALIZACIÓN
   // ==========================================
-  cargarDepartamentosBD();
+  // Evita renderizar departamentos como desconocidos por una condición de carrera.
+  // Si el catálogo falla, cargarDepartamentosBD maneja el error y permite listar vacantes.
+  async function inicializarCatalogosVacantes() {
+    await cargarDepartamentosBD();
+    await cargarVacantes();
+  }
+
+  void inicializarCatalogosVacantes();
   cargarStatsDashboard();
-  cargarVacantes();
   cargarUsuarios();
   cargarEmpleados();
-  cargarContadorAplicaciones();
   cargarDocumentosRAG(); // Cargar documentos al inicio
 });

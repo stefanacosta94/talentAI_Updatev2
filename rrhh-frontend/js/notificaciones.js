@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const filtroEvento = $('filtro-notificaciones-evento');
   const filtroModo = $('filtro-notificaciones-modo');
   const filtroBuscar = $('buscar-notificaciones');
+  const btnLimpiar = $('btn-limpiar-filtros-notificaciones');
   const btnAnterior = $('pag-anterior');
   const btnSiguiente = $('pag-siguiente');
   const btnProcesar = $('btn-procesar-simulacion');
@@ -274,9 +275,17 @@ document.addEventListener('DOMContentLoaded', () => {
       texto('kpi-fallidos', datos.fallidos);
       texto('kpi-revision', `${datos.revision ?? 0} en revisión`);
       texto('servicio-ultima', fecha(datos.ultimo_evento_en, true));
+      const pendientes = Number(datos.pendientes) || 0;
+      const revision = Number(datos.revision) || 0;
+      const aviso = $('nc-estado-operativo');
+      aviso.querySelector('span').textContent = `${pendientes} pendientes por procesar · ${revision} en revisión. Los envíos aceptados y entregados se contabilizan por separado.`;
+      aviso.classList.toggle('nc-has-pending', pendientes > 0 || revision > 0);
     } catch (_) {
       ['total-notificaciones', 'kpi-pendientes', 'kpi-aceptados', 'kpi-fallidos',
         'kpi-entregados', 'kpi-rebotados', 'kpi-revision', 'servicio-ultima'].forEach((id) => texto(id, '—'));
+      const aviso = $('nc-estado-operativo');
+      aviso.querySelector('span').textContent = 'Resumen no disponible. El historial puede seguir consultándose.';
+      aviso.classList.remove('nc-has-pending');
       // La tabla sigue disponible aunque falle este endpoint de lectura.
     }
   }
@@ -560,9 +569,22 @@ document.addEventListener('DOMContentLoaded', () => {
     finally { btnConciliarWebhooks.disabled = false; }
   });
 
-  function restablecerFiltros() { pagina = 1; cargarListado(); }
+  function actualizarLimpiar() {
+    btnLimpiar.disabled = ![filtroEstado.value, filtroEvento.value, filtroModo.value, filtroBuscar.value.trim()].some(Boolean);
+  }
+  function restablecerFiltros() { pagina = 1; actualizarLimpiar(); cargarListado(); }
+  btnLimpiar.addEventListener('click', () => {
+    clearTimeout(timerBusqueda);
+    filtroEstado.value = '';
+    filtroEvento.value = '';
+    filtroModo.value = '';
+    filtroBuscar.value = '';
+    restablecerFiltros();
+    filtroBuscar.focus();
+  });
   [filtroEstado, filtroEvento, filtroModo].forEach((f) => f.addEventListener('change', restablecerFiltros));
   filtroBuscar.addEventListener('input', () => {
+    actualizarLimpiar();
     clearTimeout(timerBusqueda);
     timerBusqueda = setTimeout(restablecerFiltros, 350);
   });

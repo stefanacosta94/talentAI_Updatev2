@@ -8,6 +8,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/admin-refinements.css" />
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex">
 
@@ -109,10 +110,10 @@
 <div><h1 class="text-2xl font-black text-blue-950">Roles y permisos</h1><p class="text-xs text-slate-500 mt-1">Gestión de asignaciones de roles de seguridad para cuentas de TalentAI.</p></div>
 <section class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-800">
   <p class="font-extrabold"><i class="fa-solid fa-shield-halved mr-2"></i> Roles de seguridad del sistema</p>
-  <p class="text-xs mt-1">TalentAI reconoce actualmente dos roles: <strong>admin</strong> y <strong>empleado</strong>. Sus permisos están definidos en el backend (RBAC). Esta pantalla administra la asignación de roles a cuentas, no permite crear o borrar roles arbitrarios.</p>
+  <p class="text-xs mt-1">TalentAI reconoce actualmente dos roles: <strong>admin</strong> y <strong>empleado</strong>. Sus permisos están definidos en el backend (RBAC). Los roles se definen en el servidor y no se crean ni editan desde esta pantalla. Aquí puedes cambiar la asignación por usuario; los cargos laborales se administran por separado.</p>
 </section>
 <section class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
-  <h2 class="text-sm font-extrabold text-blue-950">Roles disponibles</h2>
+  <div class="flex items-center justify-between flex-wrap gap-2"><h2 class="text-sm font-extrabold text-blue-950">Roles disponibles</h2><span class="text-xs px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-slate-600">2 roles definidos en el servidor</span></div>
   <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider"><tr><th class="p-4 text-left">Rol</th><th class="p-4 text-left">Acceso</th><th class="p-4 text-left">Usuarios asignados</th></tr></thead><tbody id="tabla-roles-body"></tbody></table></div>
 </section>
 <section class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">

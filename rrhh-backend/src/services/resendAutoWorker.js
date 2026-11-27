@@ -67,6 +67,8 @@ function createResendAutoRepository(db = supabase, maxDiario = 5) {
       }
       return data;
     },
+    // La reserva automática y la manual usan la misma instantánea de notificación.
+    obtenerDatos: base.obtenerDatos,
     finalizar: base.finalizar,
   };
 }

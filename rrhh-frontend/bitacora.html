@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/admin-refinements.css" />
   </head>
   <body class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex">
 
@@ -128,7 +129,7 @@
 
           <div>
             <h1 class="text-2xl font-black text-blue-950 tracking-tight">Bitácora de Auditoría</h1>
-            <p class="text-xs text-slate-500 font-medium mt-1">Registro inmutable de todas las acciones administrativas realizadas en la plataforma. Solo lectura.</p>
+            <p class="text-xs text-slate-500 font-medium mt-1">Consulta de eventos administrativos registrados. Los indicadores y filtros se basan en el lote cargado; consulta de solo lectura.</p>
           </div>
 
           <!-- Filtros -->
@@ -139,17 +140,21 @@
             </div>
             <select id="filtro-modulo" class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
               <option value="">Todos los módulos</option>
-              <option value="Vacantes">Vacantes</option>
-              <option value="Empleados">Empleados</option>
-              <option value="Usuarios">Usuarios</option>
-              <option value="Base Conocimiento">Base Conocimiento</option>
+
             </select>
           </div>
 
+          <div class="audit-toolbar">
+            <label class="text-xs text-slate-600" for="audit-fecha-desde">Desde <input id="audit-fecha-desde" type="date" class="ml-1 px-2 py-2 bg-white border border-slate-200 rounded-lg" /></label>
+            <label class="text-xs text-slate-600" for="audit-fecha-hasta">Hasta <input id="audit-fecha-hasta" type="date" class="ml-1 px-2 py-2 bg-white border border-slate-200 rounded-lg" /></label>
+            <button id="audit-limpiar-filtros" type="button" class="admin-action admin-action-edit">Limpiar filtros</button>
+            <button id="audit-exportar-csv" type="button" class="admin-action admin-action-edit"><i class="fa-solid fa-file-csv mr-1"></i> Exportar vista CSV</button>
+          </div>
+          <div class="audit-meta"><span id="audit-resultados" aria-live="polite">Cargando registros…</span><span id="audit-actualizado">—</span></div>
           <!-- Stats de actividad -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm text-center">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Registros</p>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Registros visibles</p>
               <h3 id="stat-total-logs" class="text-3xl font-black text-blue-950 mt-2">—</h3>
             </div>
             <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm text-center">
@@ -164,12 +169,16 @@
               <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuarios</p>
               <h3 id="stat-usuarios" class="text-3xl font-black text-orange-500 mt-2">—</h3>
             </div>
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm text-center">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Eventos ATS</p>
+              <h3 id="stat-ats" class="text-3xl font-black text-indigo-600 mt-2">—</h3>
+            </div>
           </div>
 
           <!-- Tabla de Bitácora -->
           <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs">
+            <div class="admin-table-wrap">
+              <table class="admin-table min-w-[1100px] text-xs">
                 <thead>
                   <tr class="border-b border-slate-100 bg-slate-50/80">
                     <th class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]">#</th>

@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function render() {
     const count = role => users.filter(u => u.rol === role).length;
     rolesBody.innerHTML = [
-      { id: "admin", desc: "Administración de recursos, cuentas, documentación y ATS" },
-      { id: "empleado", desc: "Acceso al asistente de Recursos Humanos" }
-    ].map(r => `<tr class="border-b border-slate-100"><td class="p-4 font-extrabold text-blue-950">${r.id}</td><td class="p-4 text-slate-600">${r.desc}</td><td class="p-4">${count(r.id)}</td></tr>`).join("");
+      { id: "admin", desc: "Gestión de vacantes, ATS, organización, cuentas, auditoría y asistente IA" },
+      { id: "empleado", desc: "Uso del asistente de Recursos Humanos; sin privilegios de administración" }
+    ].map(r => `<tr class="border-b border-slate-100"><td class="p-4"><span class="px-3 py-1 rounded-full font-bold ${r.id === 'admin' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-700'}">${r.id}</span></td><td class="p-4 text-slate-600">${r.desc}</td><td class="p-4">${count(r.id)}</td></tr>`).join("");
     const filter = document.getElementById("buscar-usuario-rol").value.trim().toLowerCase();
     const filtered = users.filter(u => `${u.nombre} ${u.email}`.toLowerCase().includes(filter));
     usuariosBody.innerHTML = filtered.length ? filtered.map(u => `

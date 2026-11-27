@@ -13,6 +13,17 @@ function createResendTestRepository(client = require('../config/supabase')) {
   }
   return {
     reclamar: () => rpc('talentai_reclamar_notificaciones_resend_prueba', { p_limite: 1 }),
+    obtenerDatos: async (item) => {
+      const { data, error } = await client.from('notificaciones_email')
+        .select('id_notificacion,id_aplicacion,tipo_evento,nombre_candidato,titulo_vacante')
+        .eq('id_notificacion', item.id_notificacion)
+        .single();
+      if (error || !data) throw new Error('No fue posible recuperar la notificación reservada.');
+      if (data.tipo_evento !== item.tipo_evento || data.id_notificacion !== item.id_notificacion) {
+        throw new TypeError('Notificación inconsistente con la reserva.');
+      }
+      return data;
+    },
     finalizar: (item, respuesta) => rpc('talentai_finalizar_notificacion_resend_prueba', {
       p_id: item.id_notificacion,
       p_token: item.lease_token,
@@ -35,7 +46,10 @@ async function procesarUnaPrueba({
   for (const item of filas) {
     let respuesta;
     try {
-      respuesta = await enviar({ idNotificacion: item.id_notificacion, evento: item.tipo_evento, env });
+      // Recuperar datos reales guardados al crear el evento, sin exponerlos en logs.
+      // No se envía ningún correo si el detalle no puede verificarse.
+      const notificacion = await repo.obtenerDatos(item);
+      respuesta = await enviar({ idNotificacion: item.id_notificacion, evento: item.tipo_evento, notificacion, env });
       if (!respuesta || !['aceptado_proveedor','fallo_transitorio','fallo_permanente','resultado_incierto'].includes(respuesta.resultado)) {
         respuesta = { resultado: 'resultado_incierto', codigo: 'RESEND_UNCERTAIN', idMensaje: null };
       }

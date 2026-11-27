@@ -953,3 +953,48 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Cierre 04: jerarquía operativa sin cambiar acciones ni autorizaciones. */
+.nc-hero { grid-template-columns: minmax(260px, 1fr) minmax(270px, .55fr); align-items: start; }
+.nc-service-collapsible { overflow: visible; }
+.nc-service-collapsible > summary { cursor: pointer; list-style: none; user-select: none; }
+.nc-service-collapsible > summary::-webkit-details-marker { display: none; }
+.nc-service-collapsible > summary > span { font-size: 12px; font-weight: 850; color: #1f3960; }
+.nc-service-collapsible > summary > small { font-size: 10px; font-weight: 700; color: #637b9e; margin-left: auto; }
+.nc-service-collapsible .nc-disclosure-icon { color: #6683a9; transition: transform .18s ease; }
+.nc-service-collapsible[open] .nc-disclosure-icon { transform: rotate(180deg); }
+.nc-service-collapsible > summary:focus-visible, .nc-advanced-tools > summary:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+.nc-operations-tip {
+  display: flex; gap: 10px; align-items: flex-start;
+  color: #385578; font-size: 11px; font-weight: 700;
+  border: 1px solid #d9e6f8; border-radius: 13px;
+  padding: 12px 15px; background: #f1f6ff;
+}
+.nc-operations-tip > i { color: #2861d4; margin-top: 1px; }
+.nc-operations-tip.nc-has-pending { background: #fffbf0; border-color: #f1dfac; color: #805c20; }
+.nc-operations-tip.nc-has-pending > i { color: #b47b15; }
+.nc-advanced-tools { position: relative; }
+.nc-advanced-tools > summary {
+  display: inline-flex; align-items: center; gap: 8px;
+  cursor: pointer; list-style: none;
+  border-radius: 9px; border: 1px solid #d8e3f6;
+  padding: 10px 12px; color: #335b9b;
+  background: #f7faff; font-size: 11px; font-weight: 800;
+}
+.nc-advanced-tools > summary::-webkit-details-marker { display: none; }
+.nc-advanced-tools[open] > summary > .fa-chevron-down { transform: rotate(180deg); }
+.nc-advanced-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 13px; margin-top: 9px;
+  border-radius: 13px; border: 1px solid #dae5f6;
+  background: #f8faff;
+}
+.nc-tools { gap: 9px; }
+#btn-limpiar-filtros-notificaciones:disabled { opacity: .42; }
+@media (max-width: 1100px) { .nc-hero { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .nc-service-collapsible .nc-disclosure-icon { transition: none; }
+}

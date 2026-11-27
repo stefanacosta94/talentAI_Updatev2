@@ -157,6 +157,10 @@
               que publicó las vacantes reales del listado inferior.</span
             >
           </div>
+          <figure class="talentai-stock-photo jobs-stock-photo">
+            <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72" loading="lazy" decoding="async" alt="Profesionales conversando en un entorno de trabajo colaborativo" width="1000" height="665" referrerpolicy="no-referrer" />
+            <figcaption>Fotografía ilustrativa de trabajo en equipo. <a href="https://unsplash.com/" target="_blank" rel="noopener noreferrer">Imagen: Unsplash</a>.</figcaption>
+          </figure>
           <div class="jobs-company-card">
             <div class="jobs-company-emblem">
               <i class="fa-solid fa-building-columns"></i>
@@ -393,7 +397,7 @@
           <input id="c-id-vacante" type="hidden" />
           <div class="form-two">
             <label for="c-nombre"
-              >Nombre completo <span aria-hidden="true">*</span
+              ><span class="field-label">Nombre completo <span class="required-marker" aria-hidden="true">*</span></span>
               ><input
                 autocomplete="name"
                 id="c-nombre"
@@ -402,7 +406,7 @@
                 required=""
                 type="text" /></label
             ><label for="c-correo"
-              >Correo electrónico <span aria-hidden="true">*</span
+              ><span class="field-label">Correo electrónico <span class="required-marker" aria-hidden="true">*</span></span>
               ><input
                 autocomplete="email"
                 id="c-correo"
@@ -423,7 +427,7 @@
               Enviar código de verificación
             </button>
             <label for="c-codigo-verificacion" class="candidate-code-label">
-              Código recibido por correo <span aria-hidden="true">*</span>
+              <span class="field-label">Código recibido por correo <span class="required-marker" aria-hidden="true">*</span></span>
               <input id="c-codigo-verificacion" type="text" inputmode="numeric"
                 autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6"
                 placeholder="000000" disabled />
@@ -436,8 +440,9 @@
               <input
                 autocomplete="tel"
                 id="c-telefono"
-                maxlength="40"
-                placeholder="Tu número de contacto"
+                maxlength="17"
+                inputmode="tel"
+                placeholder="9999-9999"
                 type="tel" /></label
             ><label for="c-linkedin"
               >LinkedIn (opcional)
@@ -450,7 +455,7 @@
             /></label>
           </div>
           <label for="c-archivo-cv"
-            >Tu currículum (PDF, máximo 5 MB) <span aria-hidden="true">*</span>
+            ><span class="field-label">Tu currículum (PDF, máximo 5 MB) <span class="required-marker" aria-hidden="true">*</span></span>
             <div class="file-zone">
               <i aria-hidden="true" class="fa-solid fa-cloud-arrow-up"></i
               ><strong>Selecciona un archivo PDF</strong

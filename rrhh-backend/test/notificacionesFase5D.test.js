@@ -7,6 +7,8 @@ const { configResendTest, prepararMensajePrueba, enviarResendPrueba } = require(
 const { procesarUnaPrueba } = require('../src/services/resendTestProcessor');
 const UUID1 = '1f7338e8-a1ed-46e2-b82b-d42daea43ddd';
 const UUID2 = '84aaafc2-dbc5-4b3e-aadd-5ec071f6b343';
+const NOTA = {id_notificacion:UUID1,tipo_evento:'entrevista',nombre_candidato:'Ana García',titulo_vacante:'Analista de datos'};
+const notaDe = evento => ({...NOTA,tipo_evento:evento});
 const ENV = {
   EMAIL_MODE: 'resend_test', RESEND_TEST_ENABLED: 'true',
   RESEND_API_KEY: 're_ejemplo_muy_falso',
@@ -31,23 +33,25 @@ test('5D: destino restringido a prueba Resend o email de cuenta registrado', () 
   assert.equal(configResendTest({...ENV, RESEND_TEST_TO:'mi-cuenta@example.com', RESEND_ACCOUNT_EMAIL:'mi-cuenta@example.com'}).destino, 'mi-cuenta@example.com');
 });
 
-test('5D: HTML utiliza solo datos ficticios; idempotencia estable por notificación', () => {
+test('5D: HTML personalizado, sanitizado y clave idempotente por notificación', () => {
   const c = configResendTest(ENV);
-  const x = prepararMensajePrueba(UUID1, 'entrevista', c);
-  const y = prepararMensajePrueba(UUID1, 'entrevista', c);
+  const x = prepararMensajePrueba(UUID1, 'entrevista', c, NOTA);
+  const y = prepararMensajePrueba(UUID1, 'entrevista', c, NOTA);
   assert.deepEqual(x,y);
-  assert.match(x.payload.html,/PRUEBA TÉCNICA/);
-  assert.match(x.payload.html,/Candidato de demostración/);
-  assert.match(x.payload.text,/Vacante de demostración/);
+  assert.doesNotMatch(x.payload.html,/PRUEBA TÉCNICA|Candidato de demostración/);
+  assert.match(x.payload.html,/Ana García/);
+  assert.match(x.payload.text,/Analista de datos/);
   assert.deepEqual(x.payload.to,['delivered@resend.dev']);
-  assert.match(x.payload.subject,/\[PRUEBA TalentAI\]/);
-  assert.throws(() => prepararMensajePrueba('no-uuid','entrevista',c));
+  assert.doesNotMatch(x.payload.subject,/\[PRUEBA TalentAI\]/);
+  assert.throws(() => prepararMensajePrueba('no-uuid','entrevista',c,NOTA));
+  assert.throws(() => prepararMensajePrueba(UUID1,'entrevista',c,notaDe('contratado')));
+  assert.throws(() => prepararMensajePrueba(UUID1,'entrevista',c,null));
 });
 
-test('5D: realiza POST HTTPS con clave idempotente y sin PII de candidato', async () => {
+test('5D: envía contenido real al buzón autorizado, nunca al candidato', async () => {
   let llamada;
   const respuesta = await enviarResendPrueba({
-    idNotificacion:UUID1, evento:'postulacion_recibida', env:ENV,
+    idNotificacion:UUID1, evento:'postulacion_recibida', notificacion:notaDe('postulacion_recibida'), env:ENV,
     fetchImpl:async (url, options) => { llamada={url,options}; return {ok:true,status:200,json:async()=>({id:UUID2})}; },
   });
   assert.deepEqual(respuesta,{resultado:'aceptado_proveedor',codigo:'RESEND_ACCEPTED',idMensaje:UUID2});
@@ -55,21 +59,22 @@ test('5D: realiza POST HTTPS con clave idempotente y sin PII de candidato', asyn
   assert.equal(llamada.options.headers['Idempotency-Key'], `talentai-5d-prueba-${UUID1}`);
   assert.equal(llamada.options.headers.Authorization, `Bearer ${ENV.RESEND_API_KEY}`);
   assert.equal(JSON.parse(llamada.options.body).to[0],'delivered@resend.dev');
+  assert.match(llamada.options.body,/Ana García/);
   assert.equal(llamada.options.body.includes('candidate@personal.com'),false);
 });
 
 test('5D: 429 permite retry controlado, 401 obliga corrección, 500 y 409 quedan inciertos', async () => {
   for (const [status, esperado] of [[429,'fallo_transitorio'],[401,'fallo_permanente'],[500,'resultado_incierto'],[409,'resultado_incierto']]) {
-    const r=await enviarResendPrueba({idNotificacion:UUID1,evento:'en_revision',env:ENV,
+    const r=await enviarResendPrueba({idNotificacion:UUID1,evento:'en_revision',notificacion:notaDe('en_revision'),env:ENV,
       fetchImpl:async()=>({ok:false,status})});
     assert.equal(r.resultado,esperado);
   }
 });
 
 test('5D: timeout, caída de red o respuesta sin id requieren revisión manual', async () => {
-  const a=await enviarResendPrueba({idNotificacion:UUID1,evento:'entrevista',env:ENV,
+  const a=await enviarResendPrueba({idNotificacion:UUID1,evento:'entrevista',notificacion:NOTA,env:ENV,
     fetchImpl:async()=>{throw Error('network failure');}});
-  const b=await enviarResendPrueba({idNotificacion:UUID1,evento:'entrevista',env:ENV,
+  const b=await enviarResendPrueba({idNotificacion:UUID1,evento:'entrevista',notificacion:NOTA,env:ENV,
     fetchImpl:async()=>({ok:true,status:200,json:async()=>({})})});
   assert.equal(a.resultado,'resultado_incierto');
   assert.equal(b.resultado,'resultado_incierto');
@@ -82,7 +87,7 @@ test('5D: procesador valida configuración ANTES de tocar la cola', async () => 
 test('5D: procesador reclama un único evento y registra aceptación (sin entregar)', async () => {
   const llamados=[];
   const resumen=await procesarUnaPrueba({env:ENV,
-    repo:{reclamar:async()=>[{id_notificacion:UUID1,lease_token:UUID2,tipo_evento:'entrevista'}],
+    repo:{reclamar:async()=>[{id_notificacion:UUID1,lease_token:UUID2,tipo_evento:'entrevista'}],obtenerDatos:async()=>NOTA,
       finalizar:async(item,rs)=>{llamados.push(rs);return 'aceptado_proveedor';}},
     enviar:async()=>({resultado:'aceptado_proveedor',codigo:'RESEND_ACCEPTED',idMensaje:UUID2})});
   assert.deepEqual(resumen,{reclamadas:1,aceptadas:1,rechazadas:0,inciertas:0,sin_finalizar:0});
@@ -92,7 +97,7 @@ test('5D: procesador reclama un único evento y registra aceptación (sin entreg
 test('5D: procesador nunca vuelve a enviar cuando la finalización falla', async () => {
   let intentos=0;
   const resumen=await procesarUnaPrueba({env:ENV,
-    repo:{reclamar:async()=>[{id_notificacion:UUID1,lease_token:UUID2,tipo_evento:'entrevista'}],
+    repo:{reclamar:async()=>[{id_notificacion:UUID1,lease_token:UUID2,tipo_evento:'entrevista'}],obtenerDatos:async()=>NOTA,
       finalizar:async()=>{throw Error('rpc error');}},
     enviar:async()=>{intentos++;return {resultado:'aceptado_proveedor',codigo:'RESEND_ACCEPTED',idMensaje:UUID2};}});
   assert.equal(intentos,1);

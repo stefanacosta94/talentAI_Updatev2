@@ -18,6 +18,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/ats-ux.css" />
   </head>
   <body
     class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex"
@@ -165,7 +166,11 @@
               <i class="fa-solid fa-magnifying-glass text-xs"></i>
             </span>
             <input
-              type="text"
+              type="search"
+              id="buscador-ats"
+              aria-label="Buscar candidatos, correos o vacantes"
+              maxlength="100"
+              autocomplete="off"
               placeholder="Buscar expedientes..."
               class="pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 w-64 transition-all"
             />
@@ -190,6 +195,44 @@
               </p>
             </div>
           </div>
+
+          <!-- Indicadores de la página actualmente visible; no se presentan como métricas globales. -->
+          <section class="ats-page-insights" aria-label="Resumen de la página de candidaturas">
+            <div class="ats-page-insight"><span><i class="fa-solid fa-list-check" aria-hidden="true"></i> En esta página</span><strong id="ats-visibles">—</strong><small>Candidaturas visibles</small></div>
+            <div class="ats-page-insight"><span><i class="fa-solid fa-clock" aria-hidden="true"></i> IA sin resultado</span><strong id="ats-pendientes-ia">—</strong><small>Entre las visibles</small></div>
+            <div class="ats-page-insight"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i> Match promedio</span><strong id="ats-promedio-pagina">—</strong><small>Solo evaluadas visibles</small></div>
+          </section>
+
+          <!-- Filtros aplicados en PostgreSQL, no solo a la página visible -->
+          <div class="flex flex-wrap items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+            <label for="filtro-estado-ats" class="text-xs font-bold text-slate-600">Estado del proceso</label>
+            <select id="filtro-estado-ats" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
+              <option value="">Todos los estados</option>
+              <option value="Recibida">Recibida</option>
+              <option value="En Revisión">En Revisión</option>
+              <option value="Entrevista">Entrevista</option>
+              <option value="Contratado">Contratado</option>
+              <option value="Descartado">Descartado</option>
+            </select>
+            <button id="btn-limpiar-filtros-ats" type="button" class="ats-clear-button" disabled aria-label="Limpiar filtros ATS">
+              <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> Limpiar filtros
+            </button>
+            <button id="btn-actualizar-ats" type="button" class="ats-clear-button" aria-label="Actualizar candidaturas y resultados IA">
+              <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Actualizar
+            </button>
+            <label for="tamano-pagina-ats" class="text-xs font-bold text-slate-600 ml-auto">Filas por página</label>
+            <select id="tamano-pagina-ats" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:ring-2 focus:ring-blue-500/20 focus:outline-none">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <p id="ats-estado-actualizacion-ia" class="ats-refresh-status hidden" role="status" aria-live="polite"></p>
+
+          <p class="ats-helper-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            El match IA es una referencia de apoyo; la decisión de selección corresponde al reclutador.
+          </p>
 
           <!-- Contenedor de la Tabla -->
           <div
@@ -227,6 +270,18 @@
                 </tbody>
               </table>
             </div>
+            <nav aria-label="Paginación de candidaturas" class="flex flex-col sm:flex-row gap-3 items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/40">
+              <span id="resumen-paginacion-ats" role="status" aria-live="polite" class="text-xs text-slate-600 font-medium">Cargando candidaturas...</span>
+              <div class="flex items-center gap-2">
+                <button id="btn-pagina-anterior-ats" type="button" disabled class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100">
+                  <i class="fa-solid fa-chevron-left mr-1" aria-hidden="true"></i> Anterior
+                </button>
+                <span id="indicador-pagina-ats" class="text-xs text-slate-600 font-semibold min-w-20 text-center" aria-live="polite">Página 1</span>
+                <button id="btn-pagina-siguiente-ats" type="button" disabled class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100">
+                  Siguiente <i class="fa-solid fa-chevron-right ml-1" aria-hidden="true"></i>
+                </button>
+              </div>
+            </nav>
           </div>
         </div>
       </main>
@@ -235,6 +290,7 @@
     <!-- ================= MODAL DE DETALLES DEL CANDIDATO ================= -->
     <div
       id="modal-detalle-candidato"
+      role="dialog" aria-modal="true" aria-labelledby="modal-nombre-candidato" aria-describedby="modal-ayuda-ia" tabindex="-1"
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"
     >
       <div
@@ -260,7 +316,7 @@
           </div>
           <button
             type="button"
-            id="btn-cerrar-modal-candidato"
+            id="btn-cerrar-modal-candidato" aria-label="Cerrar detalle de candidatura"
             class="w-10 h-10 rounded-full bg-slate-200 text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors flex items-center justify-center text-lg"
           >
             <i class="fa-solid fa-xmark"></i>
@@ -295,6 +351,13 @@
             </div>
           </div>
 
+          <!-- La IA informa, pero no determina automáticamente una contratación. -->
+          <section class="ats-detail-match" aria-label="Resultado de IA">
+            <div class="ats-detail-match-head"><span>Coincidencia estimada con la vacante</span><strong id="modal-match-candidato">—</strong></div>
+            <div class="ats-match-track" role="progressbar" id="modal-match-barra" aria-label="Porcentaje de coincidencia IA" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="modal-match-relleno"></span></div>
+            <p id="modal-ayuda-ia" class="text-xs text-slate-500 mt-2">Evaluación orientativa basada en el CV y los requisitos; requiere revisión humana.</p>
+          </section>
+
           <!-- Resumen de Habilidades (IA) -->
           <div>
             <h4
@@ -318,6 +381,7 @@
             >
               Cambiar Estado del Proceso
             </h4>
+            <p id="estado-actual-candidato" class="text-xs text-slate-500 mb-3" aria-live="polite"></p>
             <div class="flex flex-wrap gap-2" id="botones-estado-container">
               <button
                 data-nuevo-estado="Recibida"

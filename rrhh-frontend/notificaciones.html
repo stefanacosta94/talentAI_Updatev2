@@ -145,15 +145,15 @@
           <h1 id="titulo-modulo">Centro de notificaciones ATS</h1>
           <p>Supervisa, filtra y controla las comunicaciones generadas por postulaciones y cambios de etapa.</p>
         </div>
-        <div class="nc-service" aria-label="Estado del servicio de notificaciones">
-          <div class="nc-service-title"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><h2>Estado del servicio</h2></div>
+        <details class="nc-service nc-service-collapsible" aria-label="Configuración técnica del servicio de notificaciones">
+          <summary class="nc-service-title"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Estado del servicio</span><small>Ver detalles técnicos</small><i class="fa-solid fa-chevron-down nc-disclosure-icon" aria-hidden="true"></i></summary>
           <div class="nc-service-grid">
             <div><p><i class="fa-solid fa-flask" aria-hidden="true"></i> Modo actual</p><span id="servicio-modo" class="nc-mini-pill nc-pill-neutral">Consultando...</span></div>
             <div><p><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Proveedor</p><span id="servicio-proveedor" class="nc-mini-pill nc-pill-blue">—</span></div>
             <div><p><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Envío a candidatos</p><span id="servicio-reales" class="nc-mini-pill nc-pill-amber">Desactivado</span></div>
             <div><p><i class="fa-regular fa-clock" aria-hidden="true"></i> Último evento</p><span id="servicio-ultima" class="nc-mini-pill nc-pill-neutral">—</span></div>
           </div>
-        </div>
+        </details>
       </section>
 
       <section class="nc-kpis" aria-label="Indicadores globales de notificaciones">
@@ -164,6 +164,10 @@
         <article class="nc-kpi nc-kpi-green"><div class="nc-kpi-icon"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i></div><div><p>Entregados</p><strong id="kpi-entregados">—</strong></div></article>
         <article class="nc-kpi nc-kpi-red"><div class="nc-kpi-icon"><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i></div><div><p>Rebotados</p><strong id="kpi-rebotados">—</strong></div></article>
       </section>
+
+      <div class="nc-operations-tip" id="nc-estado-operativo" role="status" aria-live="polite">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i><span>Consultando las comunicaciones pendientes...</span>
+      </div>
 
       <section class="nc-policy" aria-labelledby="titulo-politica-ats">
         <div class="nc-policy-copy">
@@ -184,13 +188,19 @@
           <label class="nc-select"><span class="sr-only">Filtrar por estado</span><select id="filtro-notificaciones-estado"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="procesando">Procesando</option><option value="aceptado_proveedor">Aceptado por proveedor</option><option value="fallido">Fallido</option><option value="requiere_revision">Requiere revisión</option><option value="cancelado">Cancelado</option></select></label>
           <label class="nc-select"><span class="sr-only">Filtrar por evento</span><select id="filtro-notificaciones-evento"><option value="">Todos los eventos</option><option value="postulacion_recibida">Postulación recibida</option><option value="en_revision">En revisión</option><option value="entrevista">Entrevista</option><option value="contratado">Contratado</option><option value="descartado">Descartado</option></select></label>
           <label class="nc-select"><span class="sr-only">Filtrar por autorización de envío</span><select id="filtro-notificaciones-modo"><option value="">Todos los modos</option><option value="automatico">Automático autorizado</option><option value="prueba_manual">Prueba manual autorizada</option><option value="sin_autorizacion">Sin autorizar</option></select></label>
+          <button id="btn-limpiar-filtros-notificaciones" class="nc-btn nc-btn-outline" type="button" disabled><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i> Limpiar</button>
         </div>
         <div class="nc-tools">
           <button id="btn-recargar-notificaciones" class="nc-btn nc-btn-primary" type="button"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Actualizar</button>
+          <details class="nc-advanced-tools">
+            <summary><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Herramientas avanzadas <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+            <div class="nc-advanced-actions">
           <button id="btn-conciliar-recepciones" class="nc-btn nc-btn-outline" type="button"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Conciliar recepciones</button>
           <button id="btn-conciliar-webhooks" class="nc-btn nc-btn-outline" type="button" hidden><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i> Conciliar entregas</button>
           <button id="btn-procesar-simulacion" class="nc-btn nc-btn-outline" type="button" hidden><i class="fa-solid fa-play" aria-hidden="true"></i> Simular pendientes</button>
           <button id="btn-procesar-resend-prueba" class="nc-btn nc-btn-link" type="button" hidden><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> Enviar prueba manual</button>
+            </div>
+          </details>
         </div>
         <p id="aviso-resend-prueba" class="nc-service-note" role="status" aria-live="polite">Comprobando la configuración de envío...</p>
       </section>

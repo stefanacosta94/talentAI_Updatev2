@@ -379,3 +379,20 @@
 .candidate-code-label input:disabled { opacity: .55; cursor: not-allowed; }
 .candidate-verification-status { font-size: 12px; line-height: 1.6; color: #4b607c; margin: 0; }
 @media (max-width: 600px) { .candidate-verification { padding: 14px; } .candidate-verification #btn-solicitar-codigo { width: 100%; } }
+
+/* Cierre 06 · Postulación accesible y compacta en escritorio. */
+#modal-aplicacion .dialog-panel { width: min(800px, calc(100vw - 32px)); max-height: min(94dvh, 960px); }
+#modal-aplicacion .dialog-header { padding: 20px 28px 15px; }
+#modal-aplicacion .application-form { padding: 20px 28px 25px; gap: 15px; }
+#modal-aplicacion .application-form .field-label { display: inline-flex; align-items: baseline; gap: 4px; color: #3c4c69; white-space: normal; }
+#modal-aplicacion .application-form .required-marker { color: #db5565; display: inline; font-weight: 800; }
+#modal-aplicacion .candidate-verification { padding: 16px 18px; }
+#modal-aplicacion .candidate-code-label { max-width: none; gap: 7px; }
+#modal-aplicacion #c-codigo-verificacion { width: 165px; max-width: 100%; font-size: 16px; letter-spacing: .24em; }
+#modal-aplicacion .file-zone { padding: 17px 12px; gap: 7px; }
+@media (max-width: 600px) {
+ #modal-aplicacion .dialog-panel { width: 100%; max-height: 94dvh; }
+ #modal-aplicacion .dialog-header { padding: 18px; }
+ #modal-aplicacion .application-form { padding: 18px; gap: 14px; }
+ #modal-aplicacion .candidate-verification { padding: 14px; }
+}

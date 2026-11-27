@@ -4,8 +4,8 @@
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (!AuthService.estaAutenticado()) {
-    window.location.replace("index.html");
+  if (!AuthService.estaAutenticado() || !AuthService.esAdmin()) {
+    window.location.replace(AuthService.estaAutenticado() ? "chat-empleado.html" : "index.html");
     return;
   }
 
@@ -35,6 +35,19 @@ document.addEventListener("DOMContentLoaded", () => {
   let empleadosGlobales = [];
   let departamentosGlobales = [];
   let cargosGlobales = [];
+  function filtrarOpcionesCargo() {
+    const departamentoId = document.getElementById('emp-departamento')?.value || '';
+    const cargoSelect = document.getElementById('emp-cargo');
+    if (!cargoSelect) return;
+    for (const option of cargoSelect.options) {
+      if (!option.value) continue;
+      const cargo = cargosGlobales.find(c => String(c.id_cargo) === option.value);
+      // Los cargos sin departamento siguen siendo válidos en cualquier área.
+      option.disabled = !!(departamentoId && cargo?.id_departamento && String(cargo.id_departamento) !== departamentoId);
+    }
+    if (cargoSelect.selectedOptions[0]?.disabled) cargoSelect.value = '';
+  }
+  document.getElementById('emp-departamento')?.addEventListener('change', filtrarOpcionesCargo);
   let usuariosGlobales = [];
   let cuentasCargadas = false;
   let empleadoEditandoId = null;
@@ -76,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectModal) {
         selectModal.innerHTML = '<option value="">Sin cargo asignado</option>' +
           cargosGlobales.map(c => `<option value="${c.id_cargo}">${SecurityUtils.escapeHTML(c.nombre)}</option>`).join("");
+        filtrarOpcionesCargo();
       }
       if (selectFiltro) {
         selectFiltro.innerHTML = '<option value="">Todos los cargos</option>' +
@@ -170,38 +184,38 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       tr.className = "border-b border-slate-100 hover:bg-blue-50/30 transition-colors group";
       tr.innerHTML = `
-        <td class="py-3 px-6">
-          <div class="flex items-center gap-3">
+        <td class="py-3 px-3 lg:px-4">
+          <div class="flex items-center gap-2 min-w-0">
             <div class="w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center font-bold text-xs shrink-0">
               ${SecurityUtils.escapeHTML(iniciales)}
             </div>
-            <div>
-              <p class="font-bold text-blue-950">${SecurityUtils.escapeHTML(emp.nombre)}</p>
+            <div class="min-w-0">
+              <p class="empleado-nombre font-bold text-blue-950" title="${SecurityUtils.escapeHTML(emp.nombre)}">${SecurityUtils.escapeHTML(emp.nombre)}</p>
             </div>
           </div>
         </td>
-        <td class="py-3 px-6 text-slate-600 font-medium">${SecurityUtils.escapeHTML(emp.correo)}</td>
-        <td class="py-3 px-6">
-          <span class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-[11px]">${SecurityUtils.escapeHTML(depto)}</span>
+        <td class="py-3 px-3 lg:px-4 text-slate-600 font-medium"><span class="empleado-correo" title="${SecurityUtils.escapeHTML(emp.correo)}">${SecurityUtils.escapeHTML(emp.correo)}</span></td>
+        <td class="py-3 px-3 lg:px-4">
+          <span title="${SecurityUtils.escapeHTML(depto)}" class="admin-ellipsis px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-[11px]">${SecurityUtils.escapeHTML(depto)}</span>
         </td>
-        <td class="py-3 px-6 text-slate-600 font-medium">${SecurityUtils.escapeHTML(puesto)}</td>
-        <td class="py-3 px-6 text-slate-500 text-xs">${SecurityUtils.escapeHTML(fecha)}</td>
-        <td class="py-3 px-6 text-slate-500 text-xs">${SecurityUtils.escapeHTML(cuenta)}</td>
-        <td class="py-3 px-6">
-          <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${estadoClase}">
-            <i class="fa-solid fa-circle text-[8px] mr-1 ${esActivo ? 'text-emerald-500' : 'text-slate-400'}"></i>
+        <td class="py-3 px-3 lg:px-4 text-slate-600 font-medium"><span class="empleado-cargo" title="${SecurityUtils.escapeHTML(puesto)}">${SecurityUtils.escapeHTML(puesto)}</span></td>
+        <td class="py-3 px-3 lg:px-4 text-slate-500 text-xs">${SecurityUtils.escapeHTML(fecha)}</td>
+        <td class="py-3 px-3 lg:px-4 text-slate-500 text-xs">${SecurityUtils.escapeHTML(cuenta)}</td>
+        <td class="py-3 px-3 lg:px-4">
+          <span class="admin-status-pill px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${estadoClase}">
+            <i aria-hidden="true" class="fa-solid fa-circle text-[8px] ${esActivo ? 'text-emerald-500' : 'text-slate-400'}"></i>
             ${SecurityUtils.escapeHTML(emp.estado)}
           </span>
         </td>
-        <td class="py-3 px-6 text-right">
-          <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button data-action="toggle-estado" data-id="${emp.id_empleado}" class="w-8 h-8 rounded-lg ${esActivo ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'} flex items-center justify-center transition-all" title="${esActivo ? 'Inactivar' : 'Activar'}">
+        <td class="py-3 px-3 lg:px-4 text-right">
+          <div class="admin-row-actions">
+            <button data-action="toggle-estado" data-id="${emp.id_empleado}" class="w-8 h-8 rounded-lg ${esActivo ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'} flex items-center justify-center transition-all" title="${esActivo ? 'Inactivar' : 'Activar'}" aria-label="${esActivo ? 'Inactivar' : 'Activar'} a ${SecurityUtils.escapeHTML(emp.nombre)}">
               <i class="fa-solid ${esActivo ? 'fa-user-slash' : 'fa-user-check'}"></i>
             </button>
-            <button data-action="editar" data-id="${emp.id_empleado}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-all" title="Editar">
+            <button data-action="editar" data-id="${emp.id_empleado}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-all" title="Editar" aria-label="Editar a ${SecurityUtils.escapeHTML(emp.nombre)}">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button data-action="eliminar" data-id="${emp.id_empleado}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-all" title="Eliminar definitivamente">
+            <button data-action="eliminar" data-id="${emp.id_empleado}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-all" title="Eliminar definitivamente" aria-label="Eliminar a ${SecurityUtils.escapeHTML(emp.nombre)}">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -221,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
     empleadoEditandoId = null;
     modalTitulo.innerText = "Nuevo Empleado";
     formEmpleado.reset();
+    filtrarOpcionesCargo();
     document.getElementById("emp-fecha").value = new Date().toISOString().split("T")[0];
     document.getElementById("emp-estado").value = "Activo";
     poblarCuentas();
@@ -293,6 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("emp-departamento").value = deptoId || "";
       
       document.getElementById("emp-cargo").value = emp.id_cargo || "";
+      filtrarOpcionesCargo();
       poblarCuentas(id);
       modalEmpleado.classList.remove("hidden");
     } else if (action === "toggle-estado") {

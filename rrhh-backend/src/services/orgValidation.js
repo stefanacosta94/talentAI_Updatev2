@@ -89,6 +89,7 @@ function employeeWriteError(error) {
       : 'Ya existe un empleado con ese correo electrónico.' };
   }
   if (error?.code === '23503') return { status: 400, message: 'La cuenta, el departamento o el cargo seleccionado no existe.' };
+  if (error?.code === '23514' && String(error.message || '').includes('CARGO_DEPARTAMENTO')) return { status: 409, message: 'El departamento del empleado debe coincidir con el departamento de referencia del cargo.' };
   if (error?.code === '23514' || error?.code === '23502') return { status: 400, message: 'Hay datos obligatorios o valores no permitidos.' };
   return null;
 }

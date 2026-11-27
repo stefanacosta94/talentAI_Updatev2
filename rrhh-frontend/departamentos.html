@@ -8,6 +8,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/admin-refinements.css" />
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex">
 
@@ -108,17 +109,27 @@
 <div class="max-w-7xl mx-auto space-y-6">
 <div><h1 class="text-2xl font-black text-blue-950">Departamentos</h1><p class="text-xs text-slate-500 mt-1">Administración de unidades de la estructura organizacional.</p></div>
 <section class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
-  <div class="flex justify-between items-center gap-3"><div><h2 class="text-sm font-extrabold text-blue-950">Catálogo de departamentos</h2><p class="text-xs text-slate-500 mt-1">Los departamentos pueden tener empleados y vacantes asociados.</p></div><span id="total-departamentos" class="text-xs text-slate-500">0 departamentos</span></div>
-  <form id="form-departamento" class="flex flex-wrap items-center gap-3">
-    <input id="departamento-nombre" type="text" required minlength="2" maxlength="120" aria-label="Nombre del departamento" placeholder="Ej. Recursos Humanos" class="flex-1 min-w-[200px] px-4 py-2.5 border border-slate-200 rounded-xl text-xs" />
-    <button id="btn-guardar-departamento" type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold">Crear departamento</button>
-    <button id="btn-limpiar-departamento" type="button" class="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold">Cancelar edición</button>
-  </form>
+  <div class="flex justify-between items-center flex-wrap gap-3"><div><h2 class="text-sm font-extrabold text-blue-950">Catálogo de departamentos</h2><p class="text-xs text-slate-500 mt-1">Los departamentos pueden tener empleados, cargos y vacantes asociados.</p></div><div class="flex items-center gap-3"><span id="total-departamentos" class="text-xs text-slate-500">0 departamentos</span><button id="btn-nuevo-departamento" type="button" class="admin-action bg-blue-600 text-white hover:bg-blue-700"><i class="fa-solid fa-plus mr-1" aria-hidden="true"></i> Nuevo departamento</button></div></div>
+  <p class="admin-section-hint">La columna «N.º» es correlativa solo para mostrar la lista. Los identificadores internos no se renumeran cuando se elimina un departamento.</p>
   <input id="buscar-departamento" type="search" placeholder="Buscar departamento..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs" aria-label="Buscar departamentos" />
-  <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-slate-50 uppercase text-slate-500 tracking-widest text-[10px]"><tr><th class="p-4 text-left">ID</th><th class="p-4 text-left">Nombre del departamento</th><th class="p-4 text-right">Acciones</th></tr></thead><tbody id="tabla-departamentos-body"><tr><td colspan="3" class="p-6 text-center">Cargando departamentos...</td></tr></tbody></table></div>
+  <div class="admin-table-wrap"><table class="admin-table min-w-[620px] text-xs"><thead class="bg-slate-50 uppercase text-slate-500 tracking-widest text-[10px]"><tr><th class="p-4 text-left">N.º</th><th class="p-4 text-left">Nombre del departamento</th><th class="p-4 text-right">Acciones</th></tr></thead><tbody id="tabla-departamentos-body"><tr><td colspan="3" class="p-6 text-center">Cargando departamentos...</td></tr></tbody></table></div>
 </section>
 </div>
 </main></div>
+
+<div id="modal-departamento" class="admin-catalog-modal" hidden>
+  <div class="admin-catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-departamento-titulo" tabindex="-1">
+    <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-slate-100">
+      <div><h2 id="modal-departamento-titulo" class="text-lg font-extrabold text-blue-950">Nuevo departamento</h2><p class="text-xs text-slate-500 mt-1">Agrega una unidad organizacional al catálogo.</p></div>
+      <button id="btn-cerrar-modal-departamento" type="button" class="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200" aria-label="Cerrar formulario"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="form-departamento" class="p-6 grid gap-4">
+      <span id="departamento-edit-indicator" class="admin-edit-indicator hidden" aria-live="polite">Editando departamento</span>
+      <label for="departamento-nombre" class="admin-catalog-field">Nombre del departamento <input id="departamento-nombre" type="text" required minlength="2" maxlength="120" placeholder="Ej. Recursos Humanos" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium" /></label>
+      <div class="flex justify-end gap-3 mt-2"><button id="btn-limpiar-departamento" type="button" class="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold">Cancelar</button><button id="btn-guardar-departamento" type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold">Crear departamento</button></div>
+    </form>
+  </div>
+</div>
 <script src="js/config.js"></script>
 <script src="js/departamentos.js"></script>
 </body></html>

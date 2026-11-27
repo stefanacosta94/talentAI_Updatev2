@@ -15,6 +15,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const correoInput = document.getElementById("c-correo");
   const btnSolicitarCodigo = document.getElementById("btn-solicitar-codigo");
   const codigoInput = document.getElementById("c-codigo-verificacion");
+  // Agrupación 4-4 solo visual. API y base de datos reciben el número sin guion.
+  const telefonoInput = document.getElementById('c-telefono');
+  function formatearTelefono(value) {
+    const digitos = String(value || '').replace(/\D/g, '').slice(0, 11);
+    const tienePrefijo = digitos.startsWith('504') && digitos.length > 8;
+    const prefijo = tienePrefijo ? '+504 ' : '';
+    const local = tienePrefijo ? digitos.slice(3, 11) : digitos.slice(0, 8);
+    return prefijo + local.slice(0, 4) + (local.length > 4 ? '-' + local.slice(4) : '');
+  }
+  telefonoInput?.addEventListener('input', () => { telefonoInput.value = formatearTelefono(telefonoInput.value); });
+
   const estadoVerificacion = document.getElementById("estado-verificacion");
   let codigoEnviadoPara = "";
   let solicitandoCodigo = false;
@@ -242,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
       datos.append("nombre", document.getElementById("c-nombre").value.trim());
       datos.append("correo", correoInput.value.trim());
       datos.append("codigo_verificacion", codigoInput.value.trim());
-      datos.append("telefono", document.getElementById("c-telefono").value.trim());
+      datos.append("telefono", (telefonoInput?.value || "").replace(/[-\s]/g, ""));
       datos.append("linkedin", document.getElementById("c-linkedin").value.trim());
       datos.append("archivo_cv", archivo);
       const respuesta = await fetch(`${PublicVacanciesAPI.apiBaseURL()}/public/aplicar`, { method: "POST", body: datos });

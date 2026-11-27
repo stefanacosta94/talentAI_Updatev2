@@ -1,0 +1,138 @@
+/* TalentAI v2.0 · Cierre 04
+   Refinamiento visual ATS y dashboard. No modifica lógica de negocio. */
+.ats-page-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 14px;
+}
+.ats-page-insight {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #e1e9f5;
+  border-radius: 19px;
+  padding: 18px 20px;
+  box-shadow: 0 5px 20px rgba(24,48,98,.035);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ats-page-insight > span {
+  font-size: 11px;
+  color: #637796;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.ats-page-insight > span i { color: #3268db; }
+.ats-page-insight strong {
+  font-size: 30px;
+  letter-spacing: -.045em;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #142a59;
+  font-variant-numeric: tabular-nums;
+}
+.ats-page-insight small { color: #74849c; font-size: 11px; font-weight: 550; }
+.ats-clear-button, .dash-refresh-button {
+  border-radius: 10px;
+  border: 1px solid #dce6f6;
+  background: #fff;
+  color: #285cba;
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  transition: background .17s ease, border-color .17s ease;
+}
+.ats-clear-button:hover:not(:disabled), .dash-refresh-button:hover:not(:disabled) { background: #eaf2ff; border-color: #b4cdf4; }
+.ats-clear-button:disabled, .dash-refresh-button:disabled { opacity: .45; cursor: not-allowed; }
+.ats-helper-note { font-size: 11px; font-weight: 600; color: #6a7b97; margin: -15px 2px 0; }
+.ats-helper-note i { color: #3166d0; margin-right: 4px; }
+.ats-match-cell { min-width: 110px; display: flex; align-items: flex-start; flex-direction: column; gap: 8px; }
+.ats-match-track {
+  height: 7px;
+  width: 100%;
+  min-width: 100px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: #e6edf8;
+}
+.ats-match-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3974ed, #60a5fa);
+  transition: width .25s ease;
+}
+.ats-match-helper { color: #64748b; font-size: 10px; font-weight: 650; }
+.ats-detail-match {
+  border: 1px solid #dbe7f8;
+  background: #f6f9ff;
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+.ats-detail-match-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin-bottom: 10px; }
+.ats-detail-match-head > span { font-weight: 800; font-size: 12px; color: #3a5175; }
+.ats-detail-match-head > strong { color: #1846a3; font-weight: 900; font-size: 24px; font-variant-numeric: tabular-nums; }
+.ats-detail-match .ats-match-track { height: 9px; }
+#modal-detalle-candidato button:focus-visible, #modal-detalle-candidato a:focus-visible,
+#tabla-candidatos-body button:focus-visible, .ats-clear-button:focus-visible,
+.dash-refresh-button:focus-visible, .dash-ats-link:focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+}
+/* Dashboard: distribución de estados actuales, no tasa histórica de conversión. */
+.dash-stage-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.dash-stage-row { background: #f8faff; border: 1px solid #e5ecf7; border-radius: 13px; padding: 13px 15px; min-width: 0; }
+.dash-stage-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 11px; }
+.dash-stage-label { display: inline-flex; gap: 8px; align-items: center; color: #516582; font-weight: 700; font-size: 11px; }
+.dash-stage-label i { color: #2b63d1; }
+.dash-stage-heading strong { font-size: 12px; font-weight: 900; color: #183769; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dash-stage-track { height: 8px; width: 100%; background: #e4eaf4; border-radius: 999px; overflow: hidden; }
+.dash-stage-fill { display: block; height: 100%; background: linear-gradient(90deg,#3268e0,#6c9ff8); border-radius: inherit; transition: width .26s ease; }
+.dash-stage-muted { background: linear-gradient(90deg,#94a3b8,#cbd5e1); }
+.dash-chart-explainer { color: #79869c; font-weight: 550; font-size: 11px; margin: -6px 0 0; }
+.dash-ats-link { color: #255dcd; font-size: 11px; font-weight: 800; padding: 5px 7px; border-radius: 6px; }
+.dash-ats-link:hover { background: #edf4ff; }
+@media (max-width: 900px) {
+  .ats-page-insights { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .dash-stage-list { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .ats-page-insights { grid-template-columns: 1fr; }
+  .ats-page-insight { padding: 14px 16px; }
+  .ats-page-insight strong { font-size: 26px; }
+  .ats-helper-note { margin-top: -6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ats-match-track > span, .dash-stage-fill { transition: none; }
+}
+
+/* Cierre 06 · seguimiento no intrusivo de evaluaciones asíncronas. */
+.ats-refresh-status {
+  border: 1px solid #cbdffb;
+  border-radius: 12px;
+  background: #f0f6ff;
+  color: #2852a0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 10px 14px;
+  margin: -12px 0 3px;
+}
+.ats-refresh-status[data-estado="completado"] {
+  border-color: #bbebd0;
+  background: #ecfdf5;
+  color: #047857;
+}
+.ats-refresh-status[data-estado="pausada"],
+.ats-refresh-status[data-estado="advertencia"] {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.ats-match-pending { display: inline-flex; align-items: center; white-space: nowrap; gap: 3px; }

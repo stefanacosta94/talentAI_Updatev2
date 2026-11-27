@@ -16,6 +16,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/admin-refinements.css" />
   </head>
   <body
     class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex"
@@ -165,8 +166,8 @@
       </header>
 
       <!-- Área de Contenido -->
-      <main class="flex-1 overflow-y-auto p-8 bg-origami">
-        <div class="max-w-7xl mx-auto space-y-6">
+      <main class="flex-1 min-w-0 overflow-y-auto p-4 lg:p-6 bg-origami">
+        <div class="max-w-none w-full mx-auto space-y-6">
           <!-- Cabecera -->
           <div>
             <h1 class="text-2xl font-black text-blue-950 tracking-tight">
@@ -248,14 +249,14 @@
               <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
               <input id="buscador-empleados" type="text" placeholder="Buscar por nombre o correo..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all" />
             </div>
-            <div class="flex gap-3 w-full md:w-auto">
-              <select id="filtro-depto-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
+            <div class="flex flex-wrap gap-3 w-full md:w-auto">
+              <select id="filtro-depto-empleado" class="flex-1 min-w-[180px] md:w-56 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Todas las áreas</option>
               </select>
-              <select id="filtro-cargo-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
+              <select id="filtro-cargo-empleado" class="flex-1 min-w-[150px] md:w-44 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Todos los puestos</option>
               </select>
-              <select id="filtro-estado-empleado" class="flex-1 md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
+              <select id="filtro-estado-empleado" class="flex-1 min-w-[130px] md:w-40 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Todos los estados</option>
                 <option value="Activo">Activos</option>
                 <option value="Inactivo">Inactivos</option>
@@ -267,43 +268,43 @@
           <div
             class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden"
           >
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs">
+            <div class="admin-table-wrap admin-employees-table-wrap">
+              <table class="admin-table admin-employees-table text-xs">
                 <thead>
                   <tr class="border-b border-slate-100 bg-slate-50/80">
                     <th
-                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Nombre
                     </th>
                     <th
-                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Correo
                     </th>
                     <th
-                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Departamento
                     </th>
                     <th
-                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Cargo laboral
                     </th>
                     <th
-                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Ingreso
                     </th>
-                    <th class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]">Cuenta de acceso</th>
+                    <th class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]">Cuenta de acceso</th>
                     <th
-                      class="py-4 px-6 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-left font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Estado
                     </th>
                     <th
-                      class="py-4 px-6 text-right font-black text-slate-500 uppercase tracking-widest text-[10px]"
+                      class="py-3 px-3 lg:px-4 text-right font-black text-slate-500 uppercase tracking-widest text-[10px]"
                     >
                       Acciones
                     </th>

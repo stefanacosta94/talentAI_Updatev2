@@ -38,6 +38,7 @@ function entornoAdmin(resultado = 'actualizada') {
     '../middlewares/adminOnly': () => {},
     '../services/auditService': { registrarAuditoria: async () => {} },
     '../services/atsService': {},
+    '../services/atsReadService': { obtenerPaginaAts: async () => ({}), obtenerEstadisticasAts: async () => ({}) },
     '../services/storageService': {},
     '../constants/ats': { ATS_APPLICATION_STATES, transicionesPermitidas },
     '../utils/supabaseRetry': { withSupabaseRetry: f => f(), createSupabaseError: e => e },

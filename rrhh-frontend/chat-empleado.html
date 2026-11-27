@@ -14,6 +14,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/admin-refinements.css" />
   </head>
   <body
     class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex"
@@ -80,6 +81,9 @@
   <div>
     <p class="px-3 mb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Control</p>
     <div class="space-y-0.5">
+      <a href="notificaciones.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+        <i class="fa-solid fa-envelope-open-text w-4 text-center"></i> Notificaciones
+      </a>
       <a href="bitacora.html" class="border border-transparent flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:bg-slate-50 hover:text-blue-700">
         <i class="fa-solid fa-scroll w-4 text-center"></i> Bitácora
       </a>
@@ -118,24 +122,26 @@
         </div>
         <span class="font-extrabold text-blue-950 tracking-tight text-lg"
           >TalentAI
-          <span class="text-slate-400 font-medium text-sm ml-2"
+          <span id="chat-portal-label" class="text-slate-400 font-medium text-sm ml-2"
             >| Portal del Empleado</span
           ></span
         >
       </div>
-      <div class="flex items-center gap-4">
+      <div id="chat-employee-session" class="flex items-center gap-4">
         <div class="text-right hidden sm:block">
           <p id="info-empleado-nombre" class="text-xs font-bold text-slate-800">
             Cargando...
           </p>
           <p
-            class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider"
+            id="chat-session-role" class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider"
           >
             Empleado
           </p>
         </div>
         <button
           id="btn-logout"
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión"
           class="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center justify-center"
         >
           <i class="fa-solid fa-power-off text-sm"></i>

@@ -27,36 +27,39 @@ function configResendTest(env = process.env) {
   if (typeof globalThis.fetch !== 'function') {
     throw Object.assign(new Error('Necesitas Node.js 18 o superior para usar Resend.'), { status: 503 });
   }
-  return Object.freeze({ apiKey, destino, remitente: 'TalentAI Demo <onboarding@resend.dev>' });
+  return Object.freeze({ apiKey, destino, remitente: 'TalentAI <onboarding@resend.dev>' });
 }
 
-// Esta función no incluye datos del candidato real en el payload ni en errores/logs.
-function prepararMensajePrueba(idNotificacion, evento, config) {
+// El contenido usa una instantánea histórica de la notificación ya reservada.
+// El destino sigue restringido a RESEND_TEST_TO; no se envía al candidato.
+function prepararMensajePrueba(idNotificacion, evento, config, notificacion) {
   if (!UUID.test(String(idNotificacion))) throw new TypeError('ID de notificación inválido.');
-  const correo = renderEmail({
-    evento,
-    nombreCandidato: 'Candidato de demostración',
-    tituloVacante: 'Vacante de demostración',
-    empresa: 'TalentAI Demo',
-  });
-  const banner = '<p style="padding:12px;background:#ffedd5;color:#9a3412;text-align:center;font-weight:bold">PRUEBA TÉCNICA — NO ES UNA COMUNICACIÓN REAL A UN CANDIDATO</p>';
+  if (!notificacion || notificacion.id_notificacion !== idNotificacion || notificacion.tipo_evento !== evento) {
+    throw new TypeError('Identidad de notificación inconsistente.');
+  }
+  // Nunca sustituir datos ausentes por datos ficticios. Detener el envío.
+  const nombreCandidato = String(notificacion.nombre_candidato || '').trim();
+  const tituloVacante = String(notificacion.titulo_vacante || '').trim();
+  if (!nombreCandidato || !tituloVacante) throw new TypeError('Notificación sin datos obligatorios.');
+  const correo = renderEmail({ evento, nombreCandidato, tituloVacante, empresa: 'TalentAI', idAplicacion: notificacion.id_aplicacion });
   return {
     idempotencyKey: `talentai-5d-prueba-${idNotificacion}`,
     payload: {
       from: config.remitente,
+      // La personalización no cambia la política de destinatarios autorizados.
       to: [config.destino],
-      subject: `[PRUEBA TalentAI] ${correo.asunto}`,
-      html: correo.html.replace('<body ', `<body `).replace(/(<body[^>]*>)/i, `$1${banner}`),
-      text: `PRUEBA TÉCNICA. No es una comunicación real a un candidato.\n\n${correo.texto}`,
+      subject: correo.asunto,
+      html: correo.html,
+      text: correo.texto,
     },
   };
 }
 
 // Los errores ambiguos pasan a revisión manual: un timeout/5xx puede haber sido aceptado.
 // Resend conserva idempotencia 24 h; fuera de esa ventana nunca reintentar a ciegas.
-async function enviarResendPrueba({ idNotificacion, evento, fetchImpl = globalThis.fetch, env = process.env }) {
+async function enviarResendPrueba({ idNotificacion, evento, notificacion, fetchImpl = globalThis.fetch, env = process.env }) {
   const cfg = configResendTest(env);
-  const { payload, idempotencyKey } = prepararMensajePrueba(idNotificacion, evento, cfg);
+  const { payload, idempotencyKey } = prepararMensajePrueba(idNotificacion, evento, cfg, notificacion);
   let response;
   try {
     response = await fetchImpl(RESEND_URL, {

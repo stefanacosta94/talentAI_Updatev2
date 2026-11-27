@@ -20,6 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sidebar) sidebar.classList.add("md:flex");
         const adminName = document.getElementById("info-admin");
         if (adminName) adminName.textContent = usuario?.nombre || "Administrador";
+        const tituloPortal = document.getElementById("chat-portal-label");
+        if (tituloPortal) tituloPortal.textContent = "| Panel Administrativo";
+        // En la vista administrativa la sesión se controla desde el menú lateral.
+        const sesionEmpleado = document.getElementById("chat-employee-session");
+        if (sesionEmpleado) sesionEmpleado.classList.add("md:hidden");
+        const rol = document.getElementById("chat-session-role");
+        if (rol) rol.textContent = "Administrador";
     }
 
     // Mostrar nombre de la sesión

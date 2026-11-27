@@ -18,6 +18,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/ats-ux.css" />
   </head>
   <body
     class="bg-[#f8fafc] font-sans text-slate-900 antialiased h-screen overflow-hidden flex"
@@ -213,7 +214,7 @@
                 <div class="flex justify-between items-start">
                   <span
                     class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                    >Total de Candidatos</span
+                    >Total de Postulaciones</span
                   >
                   <div
                     class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100"
@@ -229,8 +230,8 @@
                     0
                   </h3>
                   <p class="text-[11px] text-indigo-600 font-bold mt-1">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
-                    Evaluados por IA
+                    <i class="fa-solid fa-file-circle-check mr-1"></i>
+                    Candidaturas registradas
                   </p>
                 </div>
               </div>
@@ -258,11 +259,42 @@
                     0
                   </h3>
                   <p class="text-[11px] text-emerald-600 font-bold mt-1">
-                    <i class="fa-solid fa-user-check mr-1"></i> Plantilla activa
+                    <i class="fa-solid fa-user-check mr-1"></i> Empleados registrados
                   </p>
                 </div>
               </div>
             </div>
+
+            <!-- KPIs ATS calculados en PostgreSQL; no dependen de límites de Supabase -->
+            <section aria-label="Indicadores de reclutamiento" class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-sm font-extrabold text-blue-950">Salud del proceso de reclutamiento</h2>
+                <div class="flex items-center gap-3">
+                  <span class="text-[11px] text-slate-500 font-medium">Indicadores globales · PostgreSQL</span>
+                  <button id="btn-actualizar-metricas" type="button" class="dash-refresh-button" aria-label="Actualizar métricas ATS" title="Actualizar métricas ATS"><i class="fa-solid fa-rotate" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                  <div class="text-[11px] text-slate-500 font-semibold">Candidatos únicos postulados</div>
+                  <div id="stats-candidatos-unicos" class="text-2xl font-black text-blue-950 mt-1">—</div>
+                </div>
+                <div class="rounded-2xl bg-amber-50 border border-amber-100 p-4">
+                  <div class="text-[11px] text-amber-700 font-semibold">Evaluación IA pendiente</div>
+                  <div id="stats-pendientes-ia" class="text-2xl font-black text-amber-900 mt-1">—</div>
+                </div>
+                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                  <div class="text-[11px] text-blue-700 font-semibold">Match IA promedio · evaluados</div>
+                  <div id="stats-promedio-ia" class="text-2xl font-black text-blue-950 mt-1">—</div>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-xs font-bold text-slate-700">Distribución actual por etapas</h3>
+                <a href="candidatos.html" class="dash-ats-link"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Ir al ATS</a>
+              </div>
+              <p class="dash-chart-explainer">Fotografía de los estados actuales, no una tasa histórica de conversión.</p>
+              <div id="stats-etapas-ats" aria-live="polite" class="dash-stage-list">Cargando estados...</div>
+            </section>
 
             <!-- Paneles Inferiores -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -272,13 +304,21 @@
                 <h4
                   class="text-sm font-extrabold text-blue-950 flex items-center justify-between"
                 >
-                  <span>Vacantes Registradas en el Sistema</span>
+                  <span>Últimas vacantes registradas</span>
                   <span
                     class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100"
-                    >Activas</span
+                    >Recientes</span
                   >
                 </h4>
-                <div id="resumen-vacantes-cards" class="space-y-3"></div>
+                <div id="resumen-vacantes-cards" class="space-y-3" aria-live="polite"></div>
+                <div class="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                  <p id="resumen-vacantes-total" class="text-[11px] font-medium text-slate-500" aria-live="polite">Cargando vacantes...</p>
+                  <button id="btn-ver-todas-vacantes" type="button"
+                    class="text-xs font-bold text-blue-600 hover:text-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded"
+                    aria-controls="seccion-vacantes">
+                    Ver todas <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                  </button>
+                </div>
               </div>
 
               <div

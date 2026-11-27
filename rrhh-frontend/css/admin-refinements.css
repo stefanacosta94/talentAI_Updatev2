@@ -1,0 +1,56 @@
+/* TalentAI Cierre 05 - Refinamientos administrativos, sin interferir con RBAC */
+.admin-table-wrap { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.admin-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.admin-table th { white-space: nowrap; }
+.admin-table td { vertical-align: middle; }
+.admin-table tbody tr { transition: background-color .15s ease; }
+.admin-table tbody tr:hover { background: #f8fafc; }
+.admin-row-actions { display: inline-flex; flex-wrap: nowrap; justify-content: flex-end; align-items: center; gap: .4rem; opacity: 1 !important; }
+.admin-status-pill { display: inline-flex; align-items: center; justify-content: center; gap: .38rem; white-space: nowrap; line-height: 1.15; }
+.admin-ellipsis { max-width: 245px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.admin-muted { color: #64748b; font-size: .73rem; }
+.admin-id { font-variant-numeric: tabular-nums; color: #64748b; white-space: nowrap; }
+.admin-section-hint { color: #64748b; font-size: .75rem; line-height: 1.5; }
+.admin-edit-indicator { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .7rem; border-radius: .7rem; border: 1px solid #bfdbfe; background: #eff6ff; color: #1d4ed8; font-size: .75rem; font-weight: 700; }
+.admin-action { border-radius: .7rem; padding: .5rem .7rem; font-size: .75rem; font-weight: 750; border: 1px solid transparent; transition: background-color .15s; }
+.admin-action:focus-visible, .admin-table button:focus-visible, .admin-table a:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.admin-action-edit { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+.admin-action-edit:hover { background: #dbeafe; }
+.admin-action-delete { background: #fff1f2; color: #be123c; border-color: #ffe4e6; }
+.admin-action-delete:hover { background: #ffe4e6; }
+.audit-detail-text { max-width: 380px; overflow-wrap: anywhere; }
+.audit-id-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.audit-toolbar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.audit-meta { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; justify-content: space-between; font-size: .72rem; color: #64748b; }
+@media (max-width: 768px) { .admin-stack-actions { display: flex; flex-wrap: wrap; gap: .6rem; } }
+
+[hidden] { display: none !important; }
+
+/* Cierre 06 · Tabla fluida de empleados: aprovechar escritorio completo. */
+.admin-employees-table-wrap { overflow-x: visible; }
+.admin-employees-table { table-layout: fixed; width: 100%; min-width: 0; }
+.admin-employees-table th:nth-child(1) { width: 19%; }
+.admin-employees-table th:nth-child(2) { width: 17%; }
+.admin-employees-table th:nth-child(3) { width: 16%; }
+.admin-employees-table th:nth-child(4) { width: 12%; }
+.admin-employees-table th:nth-child(5) { width: 8%; }
+.admin-employees-table th:nth-child(6) { width: 9%; }
+.admin-employees-table th:nth-child(7) { width: 9%; }
+.admin-employees-table th:nth-child(8) { width: 10%; }
+.admin-employees-table td { overflow: hidden; }
+.empleado-nombre, .empleado-correo, .empleado-cargo { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-employees-table .admin-ellipsis { max-width: 100%; }
+.admin-employees-table .admin-row-actions { gap: .25rem; }
+.admin-employees-table .admin-row-actions button { width: 29px; height: 29px; flex: none; }
+.admin-employees-table .admin-status-pill { font-size: 9px; letter-spacing: .02em; }
+@media (max-width: 1240px) {
+ .admin-employees-table-wrap { overflow-x: auto; }
+ .admin-employees-table { min-width: 1070px; }
+}
+/* Cierre 06 · Modales de catálogos: formularios fuera de las tablas. */
+.admin-catalog-modal { position: fixed; inset: 0; z-index: 100; padding: 18px; background: #0f172ac2; backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; }
+.admin-catalog-dialog { width: min(480px, 100%); max-height: min(92dvh, 700px); overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 22px; box-shadow: 0 32px 85px #0f172a45; }
+.admin-catalog-dialog .admin-catalog-field { display: grid; gap: 7px; color: #475569; font-size: .77rem; font-weight: 700; }
+.admin-catalog-dialog input:focus-visible,.admin-catalog-dialog select:focus-visible { outline: 3px solid #bfdbfe; outline-offset: 2px; }
+.admin-catalog-dialog button:disabled { opacity: .65; cursor: wait; }
+body.admin-modal-open { overflow: hidden; }

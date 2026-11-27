@@ -191,6 +191,7 @@ function makeAdminRoutes(responseForOperation) {
     if (name === '../middlewares/adminOnly') return function adminOnly() {};
     if (name === '../services/auditService') return { registrarAuditoria: async (...args) => { audits.push(args); } };
     if (name === '../services/atsService') return {};
+    if (name === '../services/atsReadService') return { obtenerPaginaAts: async () => ({}), obtenerEstadisticasAts: async () => ({}) };
     if (name === '../services/storageService') return {};
     if (name === '../constants/ats') return { ATS_APPLICATION_STATES: [] };
     if (name === '../utils/supabaseRetry') return { withSupabaseRetry: op => op(), createSupabaseError: error => error };

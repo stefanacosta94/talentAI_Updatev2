@@ -1823,3 +1823,11 @@ i {
 .vacancy-retry:hover{background:#dce9ff}
 @media(max-width:900px){.employer-showcase{grid-template-columns:1fr}.featured-opportunities{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.featured-opportunities{grid-template-columns:1fr}.opportunities-preview-head{flex-direction:column;align-items:start}.benefits-list{grid-template-columns:1fr}.employer-brand h3{font-size:20px}}
+
+/* Cierre 06 · Fotografía de stock contextual (cargada desde Unsplash). */
+.talentai-stock-photo { margin: 24px 0; position: relative; border: 1px solid #dde7f4; border-radius: 20px; overflow: hidden; background: linear-gradient(125deg,#dbeafe,#f8fafc); }
+.talentai-stock-photo img { display: block; width: 100%; height: clamp(210px,28vw,340px); object-fit: cover; object-position: center; }
+.talentai-stock-photo figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 20px 18px 12px; background: linear-gradient(transparent,#061735be); color: white; font-size: 11px; line-height: 1.5; }
+.talentai-stock-photo figcaption a { color: #d9eafe; text-decoration: underline; text-underline-offset: 2px; }
+.talentai-office-photo img { height: clamp(210px,24vw,300px); }
+@media (max-width: 600px) { .talentai-stock-photo img { height: 210px; } }

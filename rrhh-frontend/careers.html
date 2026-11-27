@@ -118,7 +118,7 @@
             <div class="jobs-panel-step">
               <span>02</span>
               <div>
-                <b>Postúlate</b><small>Adjunta tu currículum en PDF.</small>
+                <b>Verifica y postúlate</b><small>Confirma tu correo y adjunta el currículum en PDF.</small>
               </div>
               <i class="fa-solid fa-file-pdf"></i>
             </div>
@@ -411,6 +411,25 @@
                 type="email"
             /></label>
           </div>
+          <section class="candidate-verification" aria-labelledby="titulo-verificacion">
+            <div class="candidate-verification-head">
+              <i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i>
+              <div>
+                <strong id="titulo-verificacion">Verifica tu correo antes de postularte</strong>
+                <p>Te enviaremos un código de seis dígitos, válido durante 10 minutos. Solo se asociará tu candidatura cuando lo confirmes.</p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-solicitar-codigo">
+              Enviar código de verificación
+            </button>
+            <label for="c-codigo-verificacion" class="candidate-code-label">
+              Código recibido por correo <span aria-hidden="true">*</span>
+              <input id="c-codigo-verificacion" type="text" inputmode="numeric"
+                autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6"
+                placeholder="000000" disabled />
+            </label>
+            <p id="estado-verificacion" class="candidate-verification-status" role="status" aria-live="polite">Primero solicita un código para el correo indicado.</p>
+          </section>
           <div class="form-two">
             <label for="c-telefono"
               >Teléfono

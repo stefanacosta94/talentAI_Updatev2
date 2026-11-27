@@ -74,13 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const deptoNombre = vacante.departamentos?.nombre || "General";
 
       // Color dinámico para el porcentaje de Match de IA
-      const matchScore = app.ai_match_score || 0;
+      const pendienteIA = app.ai_match_score === null || app.ai_match_score === undefined;
+      const matchScore = pendienteIA ? null : Number(app.ai_match_score);
       let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
-      if (matchScore >= 75)
+      if (!pendienteIA && matchScore >= 75)
         badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
-      else if (matchScore >= 50)
+      else if (!pendienteIA && matchScore >= 50)
         badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
-      else if (matchScore > 0)
+      else if (!pendienteIA && matchScore > 0)
         badgeColor = "bg-orange-50 text-orange-700 border-orange-200";
 
       // Color para el estado del proceso
@@ -108,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
                 <td class="py-4 px-6">
                     <span class="px-3 py-1 rounded-full font-black text-xs border ${badgeColor}">
-                        ${matchScore}% Match
+                        ${pendienteIA ? 'IA sin resultado' : `${matchScore}% Match`}
                     </span>
                 </td>
                 <td class="py-4 px-6">
@@ -134,6 +135,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!app) return;
 
     aplicacionActualId = app.id_aplicacion;
+    const permitidas = new Set(app.transiciones_permitidas || []);
+    document.querySelectorAll('#botones-estado-container button[data-nuevo-estado]').forEach(boton => {
+      const puedeCambiar = permitidas.has(boton.dataset.nuevoEstado);
+      boton.disabled = !puedeCambiar;
+      boton.classList.toggle('opacity-40', !puedeCambiar);
+      boton.classList.toggle('cursor-not-allowed', !puedeCambiar);
+      boton.title = puedeCambiar ? `Cambiar a ${boton.dataset.nuevoEstado}` : 'Transición no permitida desde el estado actual';
+    });
+    document.getElementById('aviso-estado-terminal')?.classList.toggle('hidden', permitidas.size > 0);
     const candidato = app.candidatos || {};
     const vacante = app.vacantes || {};
 
@@ -147,7 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
       vacante.titulo || "Puesto general";
     document.getElementById("modal-resumen-ia").textContent =
       app.ai_resumen_habilidades ||
-      "No hay análisis de IA disponible para este perfil.";
+      (app.ai_match_score === null || app.ai_match_score === undefined
+        ? "La candidatura está registrada, pero todavía no tiene evaluación IA. Puede estar en proceso o requerir revisión técnica."
+        : "No hay análisis de IA disponible para este perfil.");
 
     const linkCv = document.getElementById("modal-link-cv");
     if (app.tiene_cv) {

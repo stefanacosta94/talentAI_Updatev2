@@ -12,6 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form-aplicacion");
   const btnEnviar = document.getElementById("btn-enviar-aplicacion");
   const inputPDF = document.getElementById("c-archivo-cv");
+  const correoInput = document.getElementById("c-correo");
+  const btnSolicitarCodigo = document.getElementById("btn-solicitar-codigo");
+  const codigoInput = document.getElementById("c-codigo-verificacion");
+  const estadoVerificacion = document.getElementById("estado-verificacion");
+  let codigoEnviadoPara = "";
+  let solicitandoCodigo = false;
   const nombrePDF = document.getElementById("nombre-archivo");
   const tituloModal = document.getElementById("titulo-vacante-modal");
   const idModal = document.getElementById("c-id-vacante");
@@ -63,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ocultarModal(modal);
     form.reset();
     nombrePDF.textContent = "Formato PDF. Máx. 5 MB.";
+    reiniciarCodigo();
   };
   const cerrarExito = () => ocultarModal(modalExito);
 
@@ -78,6 +85,61 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.key !== "Escape") return;
     if (!modalExito.classList.contains("hidden")) cerrarExito();
     else if (!modal.classList.contains("hidden")) cerrarAplicacion();
+  });
+
+  const reiniciarCodigo = () => {
+    codigoEnviadoPara = "";
+    codigoInput.disabled = true;
+    codigoInput.required = false;
+    codigoInput.value = "";
+    estadoVerificacion.textContent = "Primero solicita un código para el correo indicado.";
+  };
+  correoInput.addEventListener("input", () => {
+    if (correoInput.value.trim().toLowerCase() !== codigoEnviadoPara) reiniciarCodigo();
+  });
+  btnSolicitarCodigo.addEventListener("click", async () => {
+    const correo = correoInput.value.trim().toLowerCase();
+    if (solicitandoCodigo || enviando) return;
+    if (!correoInput.checkValidity() || !correo) {
+      correoInput.reportValidity();
+      return;
+    }
+    solicitandoCodigo = true;
+    btnSolicitarCodigo.disabled = true;
+    btnSolicitarCodigo.textContent = "Enviando código...";
+    estadoVerificacion.textContent = "Solicitando verificación segura...";
+    try {
+      const respuesta = await fetch(`${PublicVacanciesAPI.apiBaseURL()}/public/verificacion/iniciar`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo }),
+      });
+      const data = await respuesta.json().catch(() => ({}));
+      if (!respuesta.ok || !data.exito) {
+        estadoVerificacion.textContent = data.error || "No fue posible solicitar el código. Inténtalo después.";
+        notificar("error", "Verificación no disponible", estadoVerificacion.textContent);
+        reiniciarCodigo();
+        return;
+      }
+      // El correo pudo cambiar mientras el servicio respondía; no presentar
+      // un código enviado a otro email como válido para el formulario actual.
+      if (correoInput.value.trim().toLowerCase() !== correo) {
+        reiniciarCodigo();
+        return;
+      }
+      // El backend puede aplicar un cooldown sin revelar existencia de cuentas.
+      codigoEnviadoPara = correo;
+      codigoInput.disabled = false;
+      codigoInput.required = true;
+      estadoVerificacion.textContent = "Revisa tu correo y spam. El código caduca en 10 minutos. Si aún no llega, espera antes de solicitar otro.";
+      codigoInput.focus();
+    } catch (_) {
+      reiniciarCodigo();
+      notificar("error", "Error de conexión", "No pudimos solicitar el código de verificación.");
+    } finally {
+      solicitandoCodigo = false;
+      btnSolicitarCodigo.disabled = false;
+      btnSolicitarCodigo.textContent = "Enviar código de verificación";
+    }
   });
 
   inputPDF.addEventListener("change", () => {
@@ -158,7 +220,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (enviando || !form.reportValidity()) return;
+    if (enviando || solicitandoCodigo) return;
+    if (!codigoEnviadoPara || correoInput.value.trim().toLowerCase() !== codigoEnviadoPara) {
+      notificar("warning", "Verificación requerida", "Solicita un código para tu correo antes de postularte.");
+      correoInput.focus();
+      return;
+    }
+    if (!form.reportValidity()) return;
     const archivo = inputPDF.files?.[0];
     if (!archivo || archivo.size > 5 * 1024 * 1024 || !archivo.name.toLowerCase().endsWith(".pdf")) {
       notificar("warning", "Revisa tu currículum", "Adjunta un archivo PDF válido de hasta 5 MB.");
@@ -172,7 +240,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const datos = new FormData();
       datos.append("id_vacante", idModal.value);
       datos.append("nombre", document.getElementById("c-nombre").value.trim());
-      datos.append("correo", document.getElementById("c-correo").value.trim());
+      datos.append("correo", correoInput.value.trim());
+      datos.append("codigo_verificacion", codigoInput.value.trim());
       datos.append("telefono", document.getElementById("c-telefono").value.trim());
       datos.append("linkedin", document.getElementById("c-linkedin").value.trim());
       datos.append("archivo_cv", archivo);
@@ -180,7 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await respuesta.json().catch(() => ({}));
       if (!respuesta.ok || !data.exito) {
         if (respuesta.status === 409) {
-          notificar("warning", "Ya existe una postulación", data.error || "Este correo ya tiene una postulación para esta vacante.", 7000);
+          notificar("warning", "Postulación no disponible", data.error || "No se puede completar esta postulación.", 7000);
+        } else if (respuesta.status === 410 || respuesta.status === 400 || respuesta.status === 429) {
+          notificar("warning", "Revisa la verificación", data.error || "Comprueba el código de tu correo.", 7000);
         } else if (typeof NotificationService !== "undefined") {
           NotificationService.apiError(respuesta, data, "No pudimos procesar tu postulación.");
         } else {

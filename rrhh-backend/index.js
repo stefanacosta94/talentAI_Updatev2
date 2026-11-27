@@ -13,6 +13,7 @@ const publicRouter = require("./src/routes/public.routes");
 const notificacionesRouter = require("./src/routes/notificaciones.routes");
 const resendWebhookRouter = require("./src/routes/resendWebhook.routes");
 const { iniciarIndexadorAutomatico } = require("./src/services/ragAutoIndexer");
+const { iniciarEvaluadorAtsAutomatico } = require("./src/services/atsEvaluationWorker");
 const {
   iniciarDespachadorAutomatico,
 } = require("./src/services/resendAutoWorker");
@@ -112,5 +113,6 @@ app.listen(PORT, () => {
     `✅ Servidor TalentAI v2.0 corriendo en http://localhost:${PORT}`,
   );
   iniciarIndexadorAutomatico();
+  iniciarEvaluadorAtsAutomatico();
   iniciarDespachadorAutomatico();
 });

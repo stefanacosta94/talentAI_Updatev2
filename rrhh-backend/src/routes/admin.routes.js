@@ -8,7 +8,7 @@ const adminOnly = require('../middlewares/adminOnly');
 const { registrarAuditoria } = require('../services/auditService');
 const atsService = require('../services/atsService');
 const { uploadPrivatePdf, createSignedUrl, removeStoredObject } = require('../services/storageService');
-const { ATS_APPLICATION_STATES } = require('../constants/ats');
+const { ATS_APPLICATION_STATES, transicionesPermitidas } = require('../constants/ats');
 const { withSupabaseRetry, createSupabaseError } = require('../utils/supabaseRetry');
 const { normalizeEmail, isValidEmail, isStrongEnoughPassword, isAllowedRole, validatePdfFile, safeFileComponent } = require('../security/securityUtils');
 const { cleanCargoName, optionalPositiveInteger, employeePayload, employeeWriteError } = require('../services/orgValidation');
@@ -369,6 +369,7 @@ router.get('/aplicaciones', async (req, res, next) => {
     const aplicacionesSeguras = (aplicaciones || []).map((aplicacion) => ({
       ...aplicacion,
       tiene_cv: Boolean(aplicacion.url_archivo_cv),
+      transiciones_permitidas: transicionesPermitidas(aplicacion.estado_proceso),
       // La ruta privada no se expone al navegador. La URL firmada se genera al solicitarla.
       url_archivo_cv: undefined,
     }));
@@ -421,22 +422,33 @@ router.put('/aplicaciones/:id/estado', async (req, res, next) => {
       });
     }
 
-    const { data, error } = await supabase
-      .from('aplicaciones_ats')
-      .update({ estado_proceso: estadoProceso })
-      .eq('id_aplicacion', id)
-      .select()
-      .maybeSingle();
-
-    if (error) throw new Error(error.message);
-    if (!data) {
+    // RPC PostgreSQL: SELECT FOR UPDATE + política de transición + auditoría atómica.
+    const { data, error } = await supabase.rpc('ats_cambiar_estado_auditado', {
+      p_id_aplicacion: id,
+      p_estado: estadoProceso,
+      p_id_usuario: req.usuario.id,
+    });
+    if (error) throw createSupabaseError(error, 'No fue posible actualizar el estado ATS');
+    const resultado = data?.[0];
+    if (!resultado) throw new Error('La operación ATS no devolvió un resultado válido.');
+    if (resultado.resultado === 'no_encontrada') {
       return res.status(404).json({ exito: false, error: 'Aplicación no encontrada.' });
     }
-
+    if (resultado.resultado === 'transicion_invalida') {
+      return res.status(409).json({
+        exito: false,
+        error: `No se permite cambiar de "${resultado.estado_anterior}" a "${estadoProceso}".`,
+        transiciones_permitidas: transicionesPermitidas(resultado.estado_anterior),
+      });
+    }
+    if (resultado.resultado === 'solicitud_invalida') {
+      return res.status(400).json({ exito: false, error: 'Solicitud de cambio de estado inválida.' });
+    }
     res.json({
       exito: true,
-      mensaje: 'Estado del candidato actualizado correctamente.',
-      aplicacion: data,
+      mensaje: resultado.resultado === 'sin_cambios' ? 'La candidatura ya tenía ese estado.' : 'Estado del candidato actualizado correctamente.',
+      aplicacion: { id_aplicacion: id, estado_proceso: resultado.estado_nuevo },
+      transiciones_permitidas: transicionesPermitidas(resultado.estado_nuevo),
     });
   } catch (error) { next(error); }
 });

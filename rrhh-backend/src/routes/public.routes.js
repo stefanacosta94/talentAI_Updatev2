@@ -1,24 +1,32 @@
+'use strict';
 const express = require('express');
 const multer = require('multer');
+const rateLimit = require('express-rate-limit');
+const { randomUUID } = require('node:crypto');
 const router = express.Router();
 const supabase = require('../config/supabase');
-const atsService = require('../services/atsService');
+const identity = require('../services/candidateIdentityService');
 const { uploadPrivatePdf, removeStoredObject } = require('../services/storageService');
 const { withSupabaseRetry, createSupabaseError } = require('../utils/supabaseRetry');
-const {
-  normalizeEmail,
-  isValidEmail,
-  validatePdfFile,
-  safeFileComponent,
-} = require('../security/securityUtils');
+const { normalizeEmail, isValidEmail, validatePdfFile, safeFileComponent } = require('../security/securityUtils');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
+// Límites locales: para varias instancias, usar store compartido (p.ej. Redis).
+const limitarPostulaciones = rateLimit({
+  windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: 'draft-8', legacyHeaders: false,
+  message: { exito: false, error: 'Demasiadas solicitudes desde esta conexión. Intenta más tarde.' },
+});
+const limitarCodigos = rateLimit({
+  windowMs: 60 * 60 * 1000, limit: 6, standardHeaders: 'draft-8', legacyHeaders: false,
+  message: { exito: false, error: 'Demasiadas verificaciones. Intenta nuevamente más tarde.' },
+});
+router.use('/aplicar', limitarPostulaciones);
+router.use('/verificacion/iniciar', limitarCodigos);
 
 router.get('/vacantes', async (req, res, next) => {
   try {
     const { data: vacantes, error } = await withSupabaseRetry(
-      () => supabase
-        .from('vacantes')
+      () => supabase.from('vacantes')
         .select('id_vacante, titulo, descripcion_puesto, requisitos, estado, fecha_creacion, departamentos (nombre)')
         .eq('estado', 'Activa'),
       { label: 'Carga pública de vacantes', attempts: 3 },
@@ -28,13 +36,28 @@ router.get('/vacantes', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.post('/verificacion/iniciar', async (req, res, next) => {
+  try {
+    const correo = normalizeEmail(req.body?.correo);
+    if (!isValidEmail(correo)) {
+      return res.status(400).json({ exito: false, error: 'El correo electrónico no es válido.' });
+    }
+    await identity.iniciarVerificacion(correo);
+    // Nunca revelar si existe o no un candidato con este email ni si hubo cooldown.
+    return res.status(202).json({
+      exito: true, verificacion_requerida: true,
+      mensaje: 'Si es posible enviar la verificación, recibirás un código en tu correo. Revisa tu bandeja y spam.',
+    });
+  } catch (error) { next(error); }
+});
+
 router.post('/aplicar', upload.single('archivo_cv'), async (req, res, next) => {
   let storagePathCV = null;
-
   try {
     const idVacante = Number(req.body.id_vacante);
     const nombre = String(req.body.nombre || '').trim();
     const correo = normalizeEmail(req.body.correo);
+    const codigo = String(req.body.codigo_verificacion || '').trim();
     const telefono = String(req.body.telefono || '').trim();
     const linkedin = String(req.body.linkedin || '').trim();
     const archivo = req.file;
@@ -48,151 +71,60 @@ router.post('/aplicar', upload.single('archivo_cv'), async (req, res, next) => {
     if (!isValidEmail(correo)) {
       return res.status(400).json({ exito: false, error: 'El correo electrónico no tiene un formato válido.' });
     }
+    if (!/^\d{6}$/.test(codigo)) {
+      return res.status(400).json({ exito: false, error: 'Es necesario ingresar el código de seis dígitos enviado a tu correo.' });
+    }
     if (telefono.length > 40 || linkedin.length > 300) {
       return res.status(400).json({ exito: false, error: 'Teléfono o enlace de LinkedIn exceden la longitud permitida.' });
     }
-
     const validacionPDF = validatePdfFile(archivo);
     if (!validacionPDF.ok) {
       return res.status(400).json({ exito: false, error: validacionPDF.error });
     }
-
-    const { data: vacante, error: errorVacante } = await supabase
-      .from('vacantes')
-      .select('id_vacante, titulo, descripcion_puesto, requisitos, estado')
-      .eq('id_vacante', idVacante)
-      .maybeSingle();
-
-    if (errorVacante) throw new Error(`No fue posible consultar la vacante: ${errorVacante.message}`);
-    if (!vacante) {
-      return res.status(404).json({ exito: false, error: 'No se encontró la vacante especificada.' });
-    }
+    // Verificar vacante antes de almacenar PDF. SQL vuelve a comprobarla dentro
+    // de la transacción por si se desactiva entre la consulta y el INSERT.
+    const { data: vacante, error: errorVacante } = await supabase.from('vacantes')
+      .select('id_vacante, estado').eq('id_vacante', idVacante).maybeSingle();
+    if (errorVacante) throw new Error('No fue posible consultar la vacante.');
+    if (!vacante) return res.status(404).json({ exito: false, error: 'No se encontró la vacante especificada.' });
     if (vacante.estado !== 'Activa') {
       return res.status(409).json({ exito: false, error: 'La vacante ya no se encuentra activa.' });
     }
 
-    const { data: candidatoExistente, error: errorConsultaCandidato } = await supabase
-      .from('candidatos')
-      .select('id_candidato')
-      .eq('correo', correo)
-      .maybeSingle();
-
-    if (errorConsultaCandidato) {
-      throw new Error(`No fue posible consultar el candidato: ${errorConsultaCandidato.message}`);
-    }
-
-    let idCandidatoReal = candidatoExistente?.id_candidato || null;
-
-    if (idCandidatoReal) {
-      const { data: aplicacionExistente, error: errorAplicacionExistente } = await supabase
-        .from('aplicaciones_ats')
-        .select('id_aplicacion')
-        .eq('id_candidato', idCandidatoReal)
-        .eq('id_vacante', idVacante)
-        .maybeSingle();
-
-      if (errorAplicacionExistente) {
-        throw new Error(`No fue posible validar aplicaciones previas: ${errorAplicacionExistente.message}`);
-      }
-
-      if (aplicacionExistente) {
-        return res.status(409).json({
-          exito: false,
-          error: 'Este candidato ya se postuló a esta vacante.',
-        });
-      }
-    }
-
-    const textoCV = await atsService.extraerTextoPDF(archivo.buffer);
-    const descripcionCompleta = `Puesto: ${vacante.titulo}. Descripción: ${vacante.descripcion_puesto}. Requisitos obligatorios: ${vacante.requisitos}`;
-    const analisisIA = await atsService.evaluarCandidato(textoCV, descripcionCompleta);
-
-    if (!idCandidatoReal) {
-      const { data: nuevoCandidato, error: errorCandidato } = await supabase
-        .from('candidatos')
-        .insert([{
-          nombre,
-          correo,
-          telefono: telefono || null,
-          enlace_linkedin: linkedin || null,
-        }])
-        .select('id_candidato')
-        .single();
-
-      if (errorCandidato) {
-        if (errorCandidato.code === '23505') {
-          const { data: candidatoConcurrente, error: errorConcurrente } = await supabase
-            .from('candidatos')
-            .select('id_candidato')
-            .eq('correo', correo)
-            .maybeSingle();
-
-          if (errorConcurrente || !candidatoConcurrente) {
-            throw new Error('No fue posible resolver el candidato existente.');
-          }
-          idCandidatoReal = candidatoConcurrente.id_candidato;
-        } else {
-          throw new Error(`Error de BD al crear candidato: ${errorCandidato.message}`);
-        }
-      } else {
-        idCandidatoReal = nuevoCandidato.id_candidato;
-      }
-    }
-
-    const { data: aplicacionConcurrente, error: errorConcurrente } = await supabase
-      .from('aplicaciones_ats')
-      .select('id_aplicacion')
-      .eq('id_candidato', idCandidatoReal)
-      .eq('id_vacante', idVacante)
-      .maybeSingle();
-
-    if (errorConcurrente) {
-      throw new Error(`No fue posible validar la postulación: ${errorConcurrente.message}`);
-    }
-    if (aplicacionConcurrente) {
-      return res.status(409).json({
-        exito: false,
-        error: 'Este candidato ya se postuló a esta vacante.',
-      });
-    }
-
-    const baseNombre = safeFileComponent(nombre, 'candidato');
-    const nombreArchivo = `cv_${Date.now()}_${baseNombre}.pdf`;
+    // Fallar antes del upload cuando no hay transporte de verificación configurado.
+    identity.configVerificacion();
+    const nombreArchivo = `cv_${randomUUID()}_${safeFileComponent(nombre, 'candidato')}.pdf`;
     storagePathCV = await uploadPrivatePdf('curriculums', nombreArchivo, archivo.buffer);
-
-    const { error: errorAplicacion } = await supabase.from('aplicaciones_ats').insert([{
-      id_vacante: idVacante,
-      id_candidato: idCandidatoReal,
-      estado_proceso: 'Recibida',
-      ai_match_score: analisisIA.ai_match_score,
-      ai_resumen_habilidades: analisisIA.ai_resumen_habilidades,
-      url_archivo_cv: storagePathCV,
-    }]);
-
-    if (errorAplicacion) {
-      if (errorAplicacion.code === '23505') {
-        await removeStoredObject('curriculums', storagePathCV).catch(() => {});
-        storagePathCV = null;
-        return res.status(409).json({
-          exito: false,
-          error: 'Este candidato ya se postuló a esta vacante.',
-        });
-      }
-      throw new Error(`Error al enlazar la aplicación: ${errorAplicacion.message}`);
+    const confirmacion = await identity.confirmarPostulacion({
+      correo, codigo, nombre, telefono, linkedin,
+      idVacante, cvPath: storagePathCV,
+    });
+    if (!confirmacion || confirmacion.resultado !== 'creada') {
+      const estados = {
+        codigo_invalido: [400, 'Código incorrecto o ya utilizado. Comprueba el correo y solicita uno nuevo si es necesario.'],
+        codigo_expirado: [410, 'El código ha caducado. Solicita uno nuevo.'],
+        codigo_bloqueado: [429, 'Se agotaron los intentos. Solicita un nuevo código cuando esté permitido.'],
+        ya_postulado: [409, 'Ya existe una postulación para esta vacante con el correo verificado.'],
+        vacante_inactiva: [409, 'La vacante ya no se encuentra activa.'],
+        solicitud_invalida: [400, 'Los datos de postulación son inválidos.'],
+      };
+      const [status, mensaje] = estados[confirmacion?.resultado] || [503, 'No fue posible confirmar la postulación.'];
+      return res.status(status).json({ exito: false, error: mensaje });
     }
-
+    // Inserción y consumo de código en una transacción; triggers 11 y 18
+    // registran notificación y evaluación IA. El CV persistido ya es referenciado.
     storagePathCV = null;
     return res.status(201).json({
-      exito: true,
-      mensaje: 'Aplicación procesada y evaluada con éxito.',
+      exito: true, id_aplicacion: confirmacion.id_aplicacion,
+      evaluacion_ia: 'pendiente', correo_verificado: true,
+      mensaje: 'Postulación recibida y correo verificado correctamente.',
     });
-  } catch (error) {
+  } catch (error) { next(error); }
+  finally {
     if (storagePathCV) {
-      await removeStoredObject('curriculums', storagePathCV).catch((cleanupError) => {
-        console.error('❌ No fue posible limpiar el CV huérfano:', cleanupError.message);
-      });
+      try { await removeStoredObject('curriculums', storagePathCV); }
+      catch (error) { console.error('[ATS-PUBLIC] No se pudo limpiar CV temporal.', { codigo: error.code }); }
     }
-    next(error);
   }
 });
 module.exports = router;
